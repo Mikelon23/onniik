@@ -89,3 +89,7 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Project custom ignores
+prompts de IA/
+
