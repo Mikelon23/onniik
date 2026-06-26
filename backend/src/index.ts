@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -6,6 +6,9 @@ import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import { errorHandler } from './middlewares/error.middleware';
+import { NotFoundError } from './errors/AppError';
+import { corsOptions } from './config/cors';
 
 dotenv.config();
 
@@ -19,8 +22,9 @@ const prisma = new PrismaClient({ adapter });
 
 // Security & Utility Middlewares
 app.use(helmet());
-app.use(cors());
-app.use(express.json());
+app.use(cors(corsOptions));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(morgan('dev'));
 
 // Health Check Endpoint
@@ -31,6 +35,16 @@ app.get('/api/health', (req: Request, res: Response) => {
     uptime: process.uptime(),
   });
 });
+
+// Fallback for non-existent routes (404)
+app.use((req: Request, res: Response, next: NextFunction) => {
+  next(
+    new NotFoundError(`La ruta solicitada ${req.originalUrl} no fue encontrada en este servidor.`)
+  );
+});
+
+// Register Global Error Handling Middleware (must be at the end)
+app.use(errorHandler);
 
 // Database connection verification
 async function checkDatabaseConnection(): Promise<void> {
