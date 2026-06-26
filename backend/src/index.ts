@@ -9,6 +9,7 @@ import { Pool } from 'pg';
 import { errorHandler } from './middlewares/error.middleware';
 import { NotFoundError } from './errors/AppError';
 import { corsOptions } from './config/cors';
+import apiRouter from './routes';
 
 dotenv.config();
 
@@ -27,14 +28,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(morgan('dev'));
 
-// Health Check Endpoint
-app.get('/api/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-  });
-});
+// Register Modular API Routes
+app.use('/api', apiRouter);
 
 // Fallback for non-existent routes (404)
 app.use((req: Request, res: Response, next: NextFunction) => {
