@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../errors/AppError';
+import logger from '../config/logger';
 
 export const errorHandler = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -12,9 +13,8 @@ export const errorHandler = (
 ): void => {
   const isDev = process.env.NODE_ENV === 'development' || !process.env.NODE_ENV;
 
-  // 1. Registro del error (para posterior acoplamiento a logger estructurado)
-  console.error('[ERROR]', {
-    message: err.message,
+  // 1. Registro del error usando Winston
+  logger.error(`${err.message || 'Error sin mensaje'} - ${req.method} ${req.path}`, {
     stack: err.stack,
     path: req.path,
     method: req.method,

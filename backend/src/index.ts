@@ -10,6 +10,7 @@ import { errorHandler } from './middlewares/error.middleware';
 import { NotFoundError } from './errors/AppError';
 import { corsOptions } from './config/cors';
 import apiRouter from './routes';
+import logger from './config/logger';
 
 dotenv.config();
 
@@ -26,7 +27,14 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(morgan('dev'));
+
+// Configurar Morgan para canalizar logs HTTP a través de Winston
+const morganStream = {
+  write: (message: string) => logger.http(message.trim()),
+};
+app.use(
+  morgan(':method :url :status :res[content-length] - :response-time ms', { stream: morganStream })
+);
 
 // Register Modular API Routes
 app.use('/api', apiRouter);
@@ -45,9 +53,9 @@ app.use(errorHandler);
 async function checkDatabaseConnection(): Promise<void> {
   try {
     await prisma.$connect();
-    console.log('[ONNIIK-API] Conexión exitosa con la base de datos PostgreSQL.');
+    logger.info('[ONNIIK-API] Conexión exitosa con la base de datos PostgreSQL.');
   } catch (error) {
-    console.error('[ONNIIK-API] Error conectando a la base de datos:', error);
+    logger.error('[ONNIIK-API] Error conectando a la base de datos:', error);
     process.exit(1);
   }
 }
@@ -55,5 +63,5 @@ async function checkDatabaseConnection(): Promise<void> {
 // Start Server
 app.listen(PORT, async () => {
   await checkDatabaseConnection();
-  console.log(`[ONNIIK-API] Servidor iniciado y escuchando en el puerto ${PORT}`);
+  logger.info(`[ONNIIK-API] Servidor iniciado y escuchando en el puerto ${PORT}`);
 });
