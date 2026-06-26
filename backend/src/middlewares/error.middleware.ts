@@ -20,6 +20,15 @@ export const errorHandler = (
     method: req.method,
   });
 
+  // 1.5. Errores de política de CORS (Acceso prohibido)
+  if (err instanceof Error && err.message === 'No permitido por la política CORS de Onniik.') {
+    res.status(403).json({
+      status: 'fail',
+      message: err.message,
+    });
+    return;
+  }
+
   // 2. Errores operacionales conocidos de la aplicación (AppError)
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
@@ -80,6 +89,17 @@ export const errorHandler = (
     res.status(400).json({
       status: 'fail',
       message: 'Sintaxis JSON inválida en el cuerpo de la petición.',
+    });
+    return;
+  }
+
+  // 4.5. Errores con código de estado HTTP explícito menor a 500 (e.g. 413 Payload Too Large de body-parser)
+  const httpStatus = err.status || err.statusCode;
+  if (typeof httpStatus === 'number' && httpStatus >= 400 && httpStatus < 500) {
+    res.status(httpStatus).json({
+      status: 'fail',
+      message: err.message || 'Error en la petición.',
+      ...(isDev && { stack: err.stack }),
     });
     return;
   }
