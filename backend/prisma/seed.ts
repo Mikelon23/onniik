@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import bcryptjs from 'bcryptjs';
 
 dotenv.config();
 
@@ -34,25 +35,28 @@ async function main() {
 
   console.log(`Organizaciones creadas: ${acme.name} y ${stark.name}`);
 
+  // Generar hash dinámico de la contraseña de prueba 'admin123'
+  const passwordHash = bcryptjs.hashSync('admin123', 10);
+
   // 2. Crear Usuarios para Acme Corporation
   const usersAcme = [
     {
       email: 'admin@acme.com',
-      passwordHash: '$2b$12$Ejm.zT8z89kLgA55Z4E3U.oQ6h2G.UjX9n/eR2S2yD96WqEexBw9m', // Hash de 'admin123'
+      passwordHash: passwordHash,
       name: 'Alice Admin',
       role: 'ADMIN' as const,
       organizationId: acme.id,
     },
     {
       email: 'it@acme.com',
-      passwordHash: '$2b$12$Ejm.zT8z89kLgA55Z4E3U.oQ6h2G.UjX9n/eR2S2yD96WqEexBw9m',
+      passwordHash: passwordHash,
       name: 'Bob IT Manager',
       role: 'IT_MANAGER' as const,
       organizationId: acme.id,
     },
     {
       email: 'reader@acme.com',
-      passwordHash: '$2b$12$Ejm.zT8z89kLgA55Z4E3U.oQ6h2G.UjX9n/eR2S2yD96WqEexBw9m',
+      passwordHash: passwordHash,
       name: 'Charlie Reader',
       role: 'READER' as const,
       organizationId: acme.id,
@@ -68,14 +72,14 @@ async function main() {
   const usersStark = [
     {
       email: 'tony@stark.com',
-      passwordHash: '$2b$12$Ejm.zT8z89kLgA55Z4E3U.oQ6h2G.UjX9n/eR2S2yD96WqEexBw9m',
+      passwordHash: passwordHash,
       name: 'Tony Stark',
       role: 'ADMIN' as const,
       organizationId: stark.id,
     },
     {
       email: 'pepper@stark.com',
-      passwordHash: '$2b$12$Ejm.zT8z89kLgA55Z4E3U.oQ6h2G.UjX9n/eR2S2yD96WqEexBw9m',
+      passwordHash: passwordHash,
       name: 'Pepper Potts',
       role: 'IT_MANAGER' as const,
       organizationId: stark.id,
