@@ -1,0 +1,38 @@
+# Dependencias de Node.js
+node_modules/
+
+# Artefactos de compilación TypeScript (se regeneran en el builder)
+dist/
+
+# Variables de entorno con secretos — NUNCA incluir en la imagen
+.env
+.env.*
+!.env.example
+
+# Archivos de log
+logs/
+*.log
+
+# Archivos de desarrollo de Prisma (la BD local SQLite, si existiese)
+prisma/*.db
+prisma/*.db-journal
+
+# Archivos de CI y configuración local
+.eslintcache
+*.tsbuildinfo
+.prettierrc
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Documentación interna
+*.md
