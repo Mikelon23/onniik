@@ -49,7 +49,8 @@ services:
       REDIS_URL: redis://redis:6379
       # Las siguientes variables deben sobreescribirse en producción mediante secretos
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-ejemplo_hash_secreto_muy_largo_de_32_caracteres}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
+      # En Docker Compose el frontend corre en :8080; en dev local en :5173
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:8080}
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,8 +75,8 @@ services:
       dockerfile: Dockerfile
       args:
         # VITE_API_URL se bake dentro del bundle JS en tiempo de build.
-        # En producción real, apunta al dominio del backend (ej. https://api.onniik.com/api).
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
+        # En producción real, apunta al dominio del backend (ej. https://api.onniik.com/api/v1).
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api/v1}
     container_name: onniik-frontend
     restart: always
     ports:
