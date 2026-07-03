@@ -68,7 +68,28 @@ services:
       start_period: 20s
       retries: 3
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # VITE_API_URL se bake dentro del bundle JS en tiempo de build.
+        # En producción real, apunta al dominio del backend (ej. https://api.onniik.com/api).
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:5000/api}
+    container_name: onniik-frontend
+    restart: always
+    ports:
+      - '8080:80'
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost/index.html']
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
 volumes:
   postgres_data:
   redis_data:
-

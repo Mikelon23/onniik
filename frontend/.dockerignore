@@ -1,0 +1,30 @@
+# Dependencias de Node.js (se reinstalan en el builder)
+node_modules/
+
+# Artefactos de compilación (se generan en el builder)
+dist/
+
+# Variables de entorno con valores locales
+.env
+.env.*
+!.env.example
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs
+.vscode/
+.idea/
+
+# Herramientas de calidad de código (no necesarias en el build)
+.eslintcache
+.prettierrc
+eslint.config.js
+
+# Git
+.git/
+.gitignore
+
+# Documentación interna
+*.md
