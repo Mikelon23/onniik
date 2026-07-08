@@ -1,0 +1,29 @@
+{
+  "name": "onniik-monorepo",
+  "version": "1.0.0",
+  "description": "Onniik — SaaS Cost Optimizer. Monorepo root: backend (Express/TypeScript) + frontend (Vite/Vanilla JS)",
+  "private": true,
+  "scripts": {
+    "lint:backend": "cd backend && node node_modules/.bin/eslint 'src/**/*.ts'",
+    "lint:frontend": "cd frontend && node node_modules/.bin/eslint 'src/**/*.js'",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "format:backend": "cd backend && node node_modules/.bin/prettier --write 'src/**/*.ts'",
+    "format:frontend": "cd frontend && node node_modules/.bin/prettier --write 'src/**/*.{js,css,html}'",
+    "format": "npm run format:backend && npm run format:frontend",
+    "prepare": "node -e \"const fs=require('fs'); if(!fs.existsSync('.git')){process.exit(0)} if(!fs.existsSync('.husky')){fs.mkdirSync('.husky')} console.log('Husky configured.')\""
+  },
+  "lint-staged": {
+    "backend/src/**/*.ts": [
+      "node backend/node_modules/.bin/eslint --fix",
+      "node backend/node_modules/.bin/prettier --write"
+    ],
+    "frontend/src/**/*.{js,css,html}": [
+      "node frontend/node_modules/.bin/eslint --fix",
+      "node frontend/node_modules/.bin/prettier --write"
+    ]
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2"
+  }
+}

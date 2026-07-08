@@ -1,0 +1,248 @@
+# Lista de Tareas: Onniik
+
+## Estrategia y Planificación de Producto
+- `[x]` **Tarea 1**: Definir formalmente la misión, visión e identidad comercial de Onniik.
+- `[x]` **Tarea 2**: Analizar el mercado de competidores directos (Zylo, Cleanshelf, Cledara) e indirectos.
+- `[ ]` **Tarea 3**: Elaborar el modelo de negocio financiero detallado (precios, costos de infraestructura de IA y márgenes).
+- `[ ]` **Tarea 4**: Diseñar las encuestas para entrevistas de descubrimiento de clientes con CFOs y Managers de IT.
+- `[ ]` **Tarea 5**: Realizar 5 entrevistas simuladas o de campo con directores financieros para priorizar dolores de SaaS.
+- `[ ]` **Tarea 6**: Mapear la matriz de dolores vs. ganancias (Customer Pain & Gain Matrix).
+- `[ ]` **Tarea 7**: Definir las especificaciones iniciales del Producto Mínimo Viable (MVP).
+- `[ ]` **Tarea 8**: Crear el glosario de términos técnicos y comerciales de Onniik (e.g., Shadow IT, Seat Reclamation).
+- `[ ]` **Tarea 9**: Definir los KPIs de negocio clave (LTV, CAC, Churn, MRR, ROI de ahorro medio).
+- `[ ]` **Tarea 10**: Elaborar el plan de contingencia de negocio (e.g., baja conversión, altos costos de API).
+- `[ ]` **Tarea 11**: Definir los flujos legales de consentimiento para la recopilación de datos de facturas y Slack.
+- `[ ]` **Tarea 12**: Establecer la política de privacidad preliminar y los términos de servicio (TOS).
+- `[ ]` **Tarea 13**: Definir la estrategia de marca: paleta de colores de alta gama, tipografía e iconografía corporativa.
+- `[ ]` **Tarea 14**: Estructurar la arquitectura de la información (sitemap) de la landing page y la plataforma interna.
+- `[ ]` **Tarea 15**: Definir el tono de comunicación de la plataforma (profesional, pragmático, inteligente).
+- `[ ]` **Tarea 16**: Crear el documento conceptual de marca y estilo visual.
+- `[ ]` **Tarea 17**: Diseñar el embudo de captación de usuarios (AARRR Metrics) para Onniik.
+- `[ ]` **Tarea 18**: Validar técnicamente el acceso a las APIs de Google Workspace y Slack en modo sandbox.
+- `[ ]` **Tarea 19**: Documentar los riesgos del proyecto en una matriz de riesgos (e.g., seguridad de APIs, límites de cuota de OpenAI).
+- `[ ]` **Tarea 20**: Realizar la sesión de aprobación del alcance y visión con las partes interesadas.
+
+## Investigación de Requisitos y Diseño UX/UI
+- `[ ]` **Tarea 21**: Diseñar el flujo de usuario (User Flow) del proceso de Onboarding de Onniik.
+- `[ ]` **Tarea 22**: Diseñar el flujo de usuario para la detección y resolución de Shadow IT.
+- `[ ]` **Tarea 23**: Diseñar el flujo de usuario para la automatización de la reclamación de asientos (licencias inactivas).
+- `[ ]` **Tarea 24**: Diseñar el flujo de usuario para el historial de ahorros y la sección de analíticas financieras.
+- `[ ]` **Tarea 25**: Crear wireframes de baja fidelidad para el panel de control de administración general (Dashboard).
+- `[ ]` **Tarea 26**: Crear wireframes de baja fidelidad para la sección de integraciones.
+- `[ ]` **Tarea 27**: Crear wireframes de baja fidelidad para el chat interactivo del Agente de IA.
+- `[ ]` **Tarea 28**: Definir el sistema de diseño visual (Design System) en CSS vanilla: variables de color, tipografía y espaciado.
+- `[ ]` **Tarea 29**: Diseñar las tarjetas (cards) y gráficos de resumen financiero para el Dashboard en alta fidelidad.
+- `[ ]` **Tarea 30**: Diseñar el layout responsivo del menú lateral y de la barra de navegación superior.
+- `[ ]` **Tarea 31**: Diseñar la pantalla de Onboarding paso a paso con los botones de conexión OAuth.
+- `[ ]` **Tarea 32**: Diseñar la tabla interactiva de inventario de SaaS con filtros de uso, costo y departamento.
+- `[ ]` **Tarea 33**: Diseñar la pantalla de detalle de una suscripción de SaaS con logs de actividad.
+- `[ ]` **Tarea 34**: Diseñar la interfaz del buzón de sugerencias del Agente de IA para optimización.
+- `[ ]` **Tarea 35**: Diseñar la sección de configuración de perfil y administración de la organización.
+- `[ ]` **Tarea 36**: Diseñar la landing page pública con sección de propuesta de valor, precios y formulario de contacto.
+- `[ ]` **Tarea 37**: Diseñar la pantalla de facturación interna de la plataforma.
+- `[ ]` **Tarea 38**: Diseñar los estados de error de la plataforma (404, 500, conexión perdida, token expirado).
+- `[ ]` **Tarea 39**: Diseñar los estados vacíos (empty states) para cuando el usuario no ha conectado integraciones.
+- `[ ]` **Tarea 40**: Diseñar los componentes de notificaciones y alertas en tiempo real (Toasts).
+- `[ ]` **Tarea 41**: Diseñar el flujo de invitación para nuevos miembros del equipo directivo.
+- `[ ]` **Tarea 42**: Crear un prototipo interactivo digital rápido de las pantallas clave.
+- `[ ]` **Tarea 43**: Realizar pruebas de usabilidad con el prototipo de diseño con 3 usuarios objetivo virtuales.
+- `[ ]` **Tarea 44**: Recopilar comentarios de la prueba de usabilidad y refinar los flujos del prototipo.
+- `[ ]` **Tarea 45**: Firmar el diseño final y congelar los mockups visuales para pasar a desarrollo frontend.
+
+## Configuración del Entorno y Arquitectura de Software
+- `[x]` **Tarea 46**: Crear la estructura inicial del repositorio Git y configurar las reglas de ramificación (GitFlow).
+- `[x]` **Tarea 47**: Configurar el archivo `.gitignore` y las variables de entorno base (`.env.example`).
+- `[x]` **Tarea 48**: Inicializar el proyecto Node.js/Express para el backend de Onniik.
+- `[x]` **Tarea 49**: Inicializar el proyecto Frontend usando Vite con Vanilla JS y Tailwind/Vanilla CSS según sea el caso.
+- `[x]` **Tarea 50**: Configurar TypeScript en el Backend para garantizar la tipicidad del código.
+- `[x]` **Tarea 51**: Configurar ESLint y Prettier en el Backend y Frontend para estandarizar el estilo de código.
+- `[x]` **Tarea 52**: Instalar y configurar Prisma ORM en el backend.
+- `[x]` **Tarea 53**: Configurar la conexión inicial con la base de datos PostgreSQL local.
+- `[x]` **Tarea 54**: Diseñar el esquema de base de datos relacional inicial en Prisma para la tabla `User` and `Organization`.
+- `[x]` **Tarea 55**: Crear la migración inicial de la base de datos y validar el estado de las tablas.
+- `[x]` **Tarea 56**: Configurar Docker Compose para levantar localmente PostgreSQL y Redis para colas.
+- `[x]` **Tarea 57**: Crear un script básico de semilla (seeding) de base de datos para generar datos de prueba.
+- `[x]` **Tarea 58**: Configurar el middleware de manejo de errores globales en el servidor backend.
+- `[x]` **Tarea 59**: Configurar el middleware para el parseo de JSON y habilitar CORS con políticas seguras.
+- `[x]` **Tarea 60**: Configurar la estructura de carpetas modular del backend (controllers, routes, services, models).
+- `[x]` **Tarea 61**: Configurar Winston o Pino para el registro de logs estructurados en el backend.
+- `[x]` **Tarea 62**: Configurar la estructura de archivos del frontend (assets, css, components, pages, js).
+- `[x]` **Tarea 63**: Integrar un bundler de CSS y compilar las variables globales CSS en el frontend.
+- `[x]` **Tarea 64**: Crear un servidor de desarrollo local para el frontend y verificar la integración con el backend.
+- `[x]` **Tarea 65**: Instalar Axios u otra librería HTTP para realizar llamadas asíncronas desde el frontend al backend.
+- `[x]` **Tarea 66**: Configurar la infraestructura del proyecto en Dockerfile para el Backend.
+- `[x]` **Tarea 67**: Configurar el Dockerfile para el Frontend en modo producción.
+- `[x]` **Tarea 68**: Crear y verificar una ruta de estado de salud del sistema (`/api/v1/health`) en el backend.
+- `[x]` **Tarea 69**: Configurar Husky para asegurar que se corra linter y pruebas antes de cada commit.
+- `[ ]` **Tarea 70**: Realizar una auditoría de dependencias inicial (`npm audit`) para mitigar vulnerabilidades.
+
+## Base de Datos y Backend Core
+- `[ ]` **Tarea 71**: Extender el esquema de base de datos en Prisma para incluir las tablas `SaaSProduct` y `SaaSSubscription`.
+- `[ ]` **Tarea 72**: Agregar las tablas `OAuthCredential`, `ActivityLog` y `OptimizationAlert` al esquema.
+- `[ ]` **Tarea 73**: Diseñar la relación entre la tabla de usuarios, suscripciones y las recomendaciones de ahorro de IA.
+- `[ ]` **Tarea 74**: Crear y ejecutar la migración del esquema completo de la base de datos de Onniik.
+- `[ ]` **Tarea 75**: Implementar el módulo de autenticación de usuarios mediante JWT (JSON Web Tokens).
+- `[ ]` **Tarea 76**: Crear las rutas de registro e inicio de sesión de usuario en el backend (`/api/v1/auth/register`, `/api/v1/auth/login`).
+- `[ ]` **Tarea 77**: Implementar el hashing de contraseñas de manera segura usando bcryptjs.
+- `[ ]` **Tarea 78**: Crear el middleware de verificación de JWT para rutas protegidas del backend.
+- `[ ]` **Tarea 79**: Crear el sistema de Roles de Usuario en el backend (RBAC: Admin, Reader, IT Manager).
+- `[ ]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
+- `[ ]` **Tarea 81**: Implementar la API de CRUD para los productos de software detectados (`/api/v1/saas`).
+- `[ ]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
+- `[ ]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
+- `[ ]` **Tarea 84**: Crear el servicio de auditoría de logs para registrar cada acción crítica de la plataforma.
+- `[ ]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
+- `[ ]` **Tarea 86**: Implementar el sistema de aceptación de invitación y vinculación de cuentas de usuario.
+- `[ ]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
+- `[ ]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.
+- `[ ]` **Tarea 89**: Crear una capa de validación de datos de entrada usando Zod o Joi en todas las rutas críticas.
+- `[ ]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
+- `[ ]` **Tarea 91**: Crear un sistema básico de envío de correos electrónicos de bienvenida y notificaciones del sistema.
+- `[ ]` **Tarea 92**: Integrar nodemailer u otro servicio de envío de correos y configurar las plantillas HTML.
+- `[ ]` **Tarea 93**: Escribir pruebas unitarias iniciales para el servicio de autenticación JWT.
+- `[ ]` **Tarea 94**: Escribir pruebas unitarias para los controladores de suscripciones SaaS.
+- `[ ]` **Tarea 95**: Escribir pruebas unitarias para el middleware de control de roles (RBAC).
+- `[ ]` **Tarea 96**: Configurar Redis en el backend y crear la cola de tareas asíncronas usando BullMQ.
+- `[ ]` **Tarea 97**: Diseñar un trabajador (worker) asíncrono básico para procesar tareas de sincronización de datos de fondo.
+- `[ ]` **Tarea 98**: Crear el endpoint de desconexión (`/api/v1/auth/logout`) e invalidación de tokens en Redis.
+- `[ ]` **Tarea 99**: Realizar la documentación preliminar de la API usando Swagger o un archivo OpenAPI.
+- `[ ]` **Tarea 100**: Ejecutar pruebas de carga iniciales sobre los endpoints de base de datos para asegurar su estabilidad.
+
+## Integraciones y Conectores de Datos
+- `[ ]` **Tarea 101**: Registrar la aplicación de Onniik en Google Cloud Console para habilitar OAuth de Google.
+- `[ ]` **Tarea 102**: Implementar el flujo OAuth2 de Google Workspace en el backend de Onniik.
+- `[ ]` **Tarea 103**: Crear el endpoint para recibir el código de autorización de Google y guardar los tokens de acceso de forma segura.
+- `[ ]` **Tarea 104**: Implementar un servicio de rotación automática de tokens de refresco OAuth de Google.
+- `[ ]` **Tarea 105**: Diseñar la integración con la API de Google Directory para obtener la lista de usuarios y empleados de la organización.
+- `[ ]` **Tarea 106**: Implementar la detección de cuentas de Gmail activas en Google Workspace para identificar correos de cobro de SaaS.
+- `[ ]` **Tarea 107**: Registrar la aplicación de Slack en Slack API Developer portal y configurar los scopes de lectura.
+- `[ ]` **Tarea 108**: Implementar la autenticación OAuth2 de Slack en el backend.
+- `[ ]` **Tarea 109**: Diseñar el servicio que consuma la API de Slack para obtener la lista de integraciones instaladas en el espacio de trabajo.
+- `[ ]` **Tarea 110**: Crear un script que identifique qué herramientas de software están conectadas a Slack (Slack Apps).
+- `[ ]` **Tarea 111**: Crear un conector para importar facturas de SaaS desde una cuenta de Gmail de prueba conectada.
+- `[ ]` **Tarea 112**: Implementar un filtro para buscar palabras clave de proveedores comunes de SaaS en los correos del buzón de IT.
+- `[ ]` **Tarea 113**: Diseñar un webhook que reciba notificaciones en tiempo real desde la API de Slack.
+- `[ ]` **Tarea 114**: Diseñar la integración con la API de facturación de Stripe para clientes de Onniik (opcional/simulado).
+- `[ ]` **Tarea 115**: Crear la lógica para consolidar los datos obtenidos de Google Workspace, Slack y facturas en una sola lista de inventario.
+- `[ ]` **Tarea 116**: Diseñar el algoritmo de coincidencia de identidades de usuarios para cruzar cuentas de Slack con Workspace.
+- `[ ]` **Tarea 117**: Implementar un sistema de alertas cuando un nuevo software de tipo Shadow IT es detectado en Slack o Workspace.
+- `[ ]` **Tarea 118**: Crear un servicio de limpieza y normalización de nombres de software (e.g. "Github", "GitHub Inc", "github.com" -> "GitHub").
+- `[ ]` **Tarea 119**: Diseñar un módulo simulado de carga de archivos CSV con inventarios de SaaS de forma manual.
+- `[ ]` **Tarea 120**: Implementar el backend para parsear y validar la carga manual de archivos CSV.
+- `[ ]` **Tarea 121**: Escribir pruebas unitarias para el decodificador de respuestas OAuth.
+- `[ ]` **Tarea 122**: Escribir pruebas unitarias para el normalizador de nombres de software.
+- `[ ]` **Tarea 123**: Crear un mock del conector de Google Directory para pruebas de integración locales sin pegarle a la API real.
+- `[ ]` **Tarea 124**: Crear un mock del conector de Slack para pruebas automatizadas.
+- `[ ]` **Tarea 125**: Configurar variables de entorno y esquemas específicos para proteger los tokens OAuth en tránsito.
+- `[ ]` **Tarea 126**: Configurar BullMQ para lanzar tareas periódicas de sincronización con Google Workspace cada 24 horas.
+- `[ ]` **Tarea 127**: Implementar la lógica para registrar fallas de sincronización de integraciones en la base de datos.
+- `[ ]` **Tarea 128**: Crear un endpoint para reactivar o reconectar integraciones con tokens vencidos.
+- `[ ]` **Tarea 129**: Validar el flujo de sincronización completo en un entorno local y documentar las cuotas de las APIs.
+- `[ ]` **Tarea 130**: Realizar pruebas de manejo de errores de API de terceros (e.g., control de excepciones cuando Slack está caído).
+
+## Procesamiento y Motor de IA con LLMs
+- `[ ]` **Tarea 131**: Configurar la integración con la API de OpenAI (u otro proveedor LLM) en el backend de Onniik.
+- `[ ]` **Tarea 132**: Crear un servicio base de IA para interactuar con la API del modelo GPT-4o-mini / Claude.
+- `[ ]` **Tarea 133**: Diseñar el prompt del sistema y la plantilla para la extracción de metadatos de facturas en PDF (monto, fecha, proveedor, moneda).
+- `[ ]` **Tarea 134**: Implementar un servicio de OCR (ej. Tesseract o API cloud) para digitalizar facturas manuales subidas por usuarios.
+- `[ ]` **Tarea 135**: Diseñar la lógica para enviar el texto de la factura a la IA y retornar un JSON estructurado.
+- `[ ]` **Tarea 136**: Implementar el algoritmo de clasificación automática de categoría de software (ej. Productividad, Desarrollo, Ventas) usando la IA.
+- `[ ]` **Tarea 137**: Diseñar el motor de recomendaciones que analiza datos de inactividad de usuarios y propone reducir licencias.
+- `[ ]` **Tarea 138**: Configurar el prompt del Agente de IA de Onniik para la redacción de correos de cancelación de suscripciones.
+- `[ ]` **Tarea 139**: Configurar el prompt del Agente de IA para la negociación de descuentos en renovaciones de SaaS.
+- `[ ]` **Tarea 140**: Crear el endpoint para generar borradores de cancelación personalizados mediante IA (`/api/v1/ai/draft-cancellation`).
+- `[ ]` **Tarea 141**: Crear la lógica para guardar las recomendaciones de IA en la base de datos y relacionarlas con las alertas.
+- `[ ]` **Tarea 142**: Implementar un mecanismo de retroalimentación donde el usuario califica si la recomendación de IA fue correcta.
+- `[ ]` **Tarea 143**: Configurar el sistema de "Human-in-the-loop" para validar correos redactados por la IA antes de enviarlos.
+- `[ ]` **Tarea 144**: Diseñar un asistente virtual conversacional en el backend (`/api/v1/ai/chat`) para responder dudas sobre gastos en SaaS.
+- `[ ]` **Tarea 145**: Implementar el procesamiento por lotes (batch processing) de facturas usando colas asíncronas para evitar timeouts.
+- `[ ]` **Tarea 146**: Escribir pruebas unitarias para el parseador de JSON devuelto por la API de OpenAI.
+- `[ ]` **Tarea 147**: Escribir pruebas de validación de prompts para evitar inyección de prompts en las facturas procesadas.
+- `[ ]` **Tarea 148**: Optimizar el uso de tokens reduciendo el contexto enviado al LLM y cacheando respuestas redundantes.
+- `[ ]` **Tarea 149**: Implementar la lógica para registrar el consumo de tokens y costos por organización.
+- `[ ]` **Tarea 150**: Crear un servicio de fallback en caso de que la API principal de LLM falle o esté caída.
+- `[ ]` **Tarea 151**: Crear tests que validen la robustez del extractor de facturas ante archivos corruptos o imágenes de baja calidad.
+- `[ ]` **Tarea 152**: Implementar una base de conocimiento interna básica (RAG) para que el chat de IA entienda la política interna de IT.
+- `[ ]` **Tarea 153**: Probar la precisión del motor de IA en el reconocimiento de 10 facturas de prueba complejas de SaaS reales.
+- `[ ]` **Tarea 154**: Documentar los prompts utilizados y la versión del modelo seleccionada para control de calidad.
+- `[ ]` **Tarea 155**: Aprobar la integración de IA con el backend de negocio.
+
+## Desarrollo del Frontend
+- `[ ]` **Tarea 156**: Estructurar el ruteador del frontend (Client-side routing o SPA layout) en la aplicación.
+- `[ ]` **Tarea 157**: Crear la estructura común de Layout: Sidebar, Header de usuario y área de contenido principal.
+- `[ ]` **Tarea 158**: Implementar la página de Login y Registro de usuarios con validaciones de formulario completas.
+- `[ ]` **Tarea 159**: Crear el estado global de autenticación en el frontend (guardado de token en localStorage/cookies seguras).
+- `[ ]` **Tarea 160**: Desarrollar la página de Onboarding con el flujo visual de conexión de integraciones de Google y Slack.
+- `[ ]` **Tarea 161**: Implementar la página del Dashboard Principal con tarjetas de KPI (Gasto total, Ahorro proyectado, Shadow IT detectados).
+- `[ ]` **Tarea 162**: Integrar una librería de gráficos (Chart.js, Recharts, o SVG dinámicos personalizados) para mostrar la tendencia de gasto mensual.
+- `[ ]` **Tarea 163**: Implementar la vista de Tabla de Inventario de SaaS con funciones de ordenamiento, paginación y búsqueda en tiempo real.
+- `[ ]` **Tarea 164**: Desarrollar la vista de Detalle de Producto SaaS con la lista de usuarios asignados y sus métricas de última actividad.
+- `[ ]` **Tarea 165**: Desarrollar la pantalla de Alertas de Optimización, con opciones para "Aceptar recomendación" o "Ignorar".
+- `[ ]` **Tarea 166**: Desarrollar el modal de aprobación de correos de IA y el historial de acciones tomadas por el agente de Onniik.
+- `[ ]` **Tarea 167**: Implementar el chat interactivo en el frontend para conversar con el Agente de IA sobre el gasto de SaaS.
+- `[ ]` **Tarea 168**: Desarrollar la pantalla de Carga Manual de Facturas mediante arrastrar y soltar (drag and drop) de archivos.
+- `[ ]` **Tarea 169**: Crear la página de Configuración de la Organización con control de perfiles y usuarios invitados.
+- `[ ]` **Tarea 170**: Desarrollar la landing page interactiva con animaciones de CSS vainilla avanzadas, gráficos responsivos y pricing interactivo.
+- `[ ]` **Tarea 171**: Implementar animaciones de carga (skeletons y spinners) para mejorar la experiencia de usuario percibida.
+- `[ ]` **Tarea 172**: Crear los componentes de alerta visual para advertir de tokens de integraciones desvinculadas.
+- `[ ]` **Tarea 173**: Asegurar la adaptabilidad móvil de todo el panel de control (Mobile First Responsive Design).
+- `[ ]` **Tarea 174**: Implementar el manejo centralizado de errores HTTP del frontend para mostrar mensajes amigables al usuario final.
+- `[ ]` **Tarea 175**: Crear la vista de facturación del plan Onniik, integrando el flujo de pago (simulado).
+- `[ ]` **Tarea 176**: Implementar el modo oscuro (dark mode) nativo mediante variables CSS personalizadas y un interruptor en la UI.
+- `[ ]` **Tarea 177**: Escribir pruebas unitarias del frontend para validar los componentes de formulario y la persistencia del estado de autenticación.
+- `[ ]` **Tarea 178**: Escribir pruebas de usabilidad técnica para verificar la accesibilidad WCAG básica (contraste, etiquetas aria).
+- `[ ]` **Tarea 179**: Realizar optimización de bundle del frontend reduciendo el tamaño de scripts y optimizando imágenes estáticas.
+- `[ ]` **Tarea 180**: Validar visualmente la UI con el diseñador en base a los prototipos de alta fidelidad originales.
+
+## Pruebas de Calidad, Integración y E2E
+- `[ ]` **Tarea 181**: Configurar un entorno de base de datos de pruebas aislado para test de integración.
+- `[ ]` **Tarea 182**: Implementar los tests de integración de API para el flujo completo de autenticación y onboarding de usuario.
+- `[ ]` **Tarea 183**: Implementar los tests de integración para el procesamiento de facturas y generación de alertas de IA.
+- `[ ]` **Tarea 184**: Configurar Cypress or Playwright para pruebas E2E (End-to-End).
+- `[ ]` **Tarea 185**: Crear un test E2E para el flujo de inicio de sesión, navegación por el dashboard y desconexión.
+- `[ ]` **Tarea 186**: Crear un test E2E que valide el flujo de carga manual de una factura PDF hasta la aparición del ahorro en el dashboard.
+- `[ ]` **Tarea 187**: Crear un test E2E de la aceptación de una invitación de nuevo miembro a la organización.
+- `[ ]` **Tarea 188**: Configurar herramientas de auditoría automática como Lighthouse para medir rendimiento, accesibilidad y SEO de la landing.
+- `[ ]` **Tarea 189**: Solucionar todos los errores detectados en la auditoría de Lighthouse hasta obtener una puntuación mayor a 90 en todos los campos.
+- `[ ]` **Tarea 190**: Realizar pruebas de rendimiento del backend ante 50 peticiones simultáneas usando autocannon o K6.
+- `[ ]` **Tarea 191**: Optimizar los índices de PostgreSQL basados en los resultados de las pruebas de rendimiento.
+- `[ ]` **Tarea 192**: Realizar pruebas de inyección de código y XSS en los formularios del frontend.
+- `[ ]` **Tarea 193**: Realizar pruebas de manejo de fallos de red en el frontend (desconexión forzada) para verificar resiliencia.
+- `[ ]` **Tarea 194**: Solucionar errores críticos (bugs) recopilados en las sesiones de prueba interna.
+- `[ ]` **Tarea 195**: Elaborar el informe final de cobertura de pruebas (buscando cobertura mayor al 80% en backend).
+
+## Seguridad y Cumplimiento Regulatorio
+- `[ ]` **Tarea 196**: Realizar un análisis de vectores de ataque y definir los perímetros de seguridad de las APIs de Onniik.
+- `[ ]` **Tarea 197**: Implementar la encriptación simétrica (AES-256) para almacenar los tokens OAuth de Google y Slack en la base de datos.
+- `[ ]` **Tarea 198**: Configurar la seguridad de las cookies del sistema (`Secure`, `HttpOnly`, `SameSite=Strict`).
+- `[ ]` **Tarea 199**: Configurar cabeceras de seguridad HTTP robustas usando Helmet en Express.
+- `[ ]` **Tarea 200**: Implementar un validador de tipos de archivos estricto en la carga de facturas para evitar carga de malware.
+- `[ ]` **Tarea 201**: Diseñar el flujo para que un usuario pueda solicitar la eliminación total de sus datos (Derecho al olvido de GDPR).
+- `[ ]` **Tarea 202**: Crear los scripts automatizados de eliminación física y lógica de información del cliente.
+- `[ ]` **Tarea 203**: Realizar una auditoría de dependencias obsoletas y de seguridad utilizando `npm audit` y Snyk.
+- `[ ]` **Tarea 204**: Implementar logs de seguridad inmutables para operaciones críticas (cambios de contraseña, exportación de datos).
+- `[ ]` **Tarea 205**: Redactar el manual de cumplimiento de seguridad y resguardo de datos para los inversionistas o clientes empresariales.
+
+## DevOps, Infraestructura y Despliegue
+- `[ ]` **Tarea 206**: Configurar la infraestructura del entorno de staging y producción en una plataforma PaaS (ej. Render, Railway o AWS).
+- `[ ]` **Tarea 207**: Configurar la base de datos PostgreSQL gestionada en la nube con backups automáticos diarios.
+- `[ ]` **Tarea 208**: Configurar Redis gestionado en la nube para el sistema de colas en producción.
+- `[ ]` **Tarea 209**: Crear los flujos de GitHub Actions para el pipeline de CI/CD automatizado.
+- `[ ]` **Tarea 210**: Configurar las pruebas automatizadas y de linter en el pipeline de Pull Request de GitHub.
+- `[ ]` **Tarea 211**: Implementar la estrategia de Zero-Downtime Deployment (despliegue progresivo o azul-verde).
+- `[ ]` **Tarea 212**: Configurar el dominio personalizado para la plataforma (`Onniik.ai` o similar) con certificados SSL/TLS automáticos.
+- `[ ]` **Tarea 213**: Instalar y configurar una herramienta de monitoreo del servidor en producción (ej. Sentry, Datadog o New Relic).
+- `[ ]` **Tarea 214**: Configurar alertas de uso de CPU, memoria y errores 5xx del servidor en Slack/Email del equipo de desarrollo.
+- `[ ]` **Tarea 215**: Realizar un despliegue de prueba en el entorno de Staging y verificar la integración de punta a punta.
+
+## Operación, Mantenimiento y Lanzamiento
+- `[ ]` **Tarea 216**: Escribir la documentación interna de arquitectura técnica del sistema para nuevos desarrolladores.
+- `[ ]` **Tarea 217**: Configurar un sistema de Help Desk / Chat de soporte al cliente (ej. Crisp o Intercom) en la landing page.
+- `[ ]` **Tarea 218**: Crear una guía de usuario interactiva y manual de Onboarding para los clientes finales.
+- `[ ]` **Tarea 219**: Configurar las herramientas de analítica web (Google Analytics / PostHog) en la landing page respetando privacidad.
+- `[ ]` **Tarea 220**: Lanzar de forma interna la plataforma (Family & Friends / Beta privada) para 10 usuarios beta.
+- `[ ]` **Tarea 221**: Recopilar y clasificar el feedback de la beta en un tablero de mejoras.
+- `[ ]` **Tarea 222**: Resolver los 5 principales dolores de usuario reportados durante la fase beta.
+- `[ ]` **Tarea 223**: Preparar la campaña de lanzamiento en Product Hunt (copys, videos, mockups de presentación).
+- `[ ]` **Tarea 224**: Realizar el lanzamiento público oficial de Onniik (Product Hunt, Twitter/X, LinkedIn).
+- `[ ]` **Tarea 225**: Monitorear el rendimiento de la plataforma durante las primeras 48 horas post-lanzamiento y estabilizar.
