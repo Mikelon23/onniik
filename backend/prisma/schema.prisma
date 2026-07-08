@@ -74,6 +74,9 @@ model Organization {
   // Relaciones
   users            User[]
   subscriptions    SaaSSubscription[]
+  oauthCredentials OAuthCredential[]
+  activityLogs     ActivityLog[]
+  alerts           OptimizationAlert[]
 
   @@map("organizations")
 }
@@ -90,7 +93,9 @@ model User {
   updatedAt      DateTime           @updatedAt @map("updated_at")
 
   // Relaciones
-  ownedSubscriptions SaaSSubscription[] @relation("SubscriptionOwner")
+  ownedSubscriptions SaaSSubscription[]  @relation("SubscriptionOwner")
+  activityLogs       ActivityLog[]        @relation("UserActivityLogs")
+  resolvedAlerts     OptimizationAlert[]  @relation("AlertResolver")
 
   @@index([organizationId])
   @@map("users")
@@ -157,6 +162,9 @@ model SaaSSubscription {
   createdAt        DateTime           @default(now()) @map("created_at")
   updatedAt        DateTime           @updatedAt @map("updated_at")
 
+  // Alertas de optimización vinculadas a esta suscripción
+  alerts           OptimizationAlert[]
+
   // Índices para queries de alto rendimiento en el Dashboard
   @@index([organizationId])
   @@index([organizationId, status])
@@ -169,4 +177,193 @@ model SaaSSubscription {
   @@unique([organizationId, saasProductId, externalId], name: "unique_org_product_external")
 
   @@map("saas_subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// ENUMS — OAuth, Logs & Alerts
+// ─────────────────────────────────────────────
+
+/// Proveedor del token OAuth almacenado
+enum OAuthProvider {
+  GOOGLE_WORKSPACE  // Google Workspace / Google Directory API
+  SLACK             // Slack Apps API
+  STRIPE            // Stripe Billing API (futuro)
+}
+
+/// Categoría semántica de la acción registrada en el log
+enum ActivityAction {
+  // Autenticación
+  USER_LOGIN
+  USER_LOGOUT
+  USER_REGISTER
+  PASSWORD_CHANGED
+  // Integraciones
+  INTEGRATION_CONNECTED
+  INTEGRATION_DISCONNECTED
+  INTEGRATION_SYNC_STARTED
+  INTEGRATION_SYNC_COMPLETED
+  INTEGRATION_SYNC_FAILED
+  // Inventario SaaS
+  SUBSCRIPTION_CREATED
+  SUBSCRIPTION_UPDATED
+  SUBSCRIPTION_CANCELLED
+  SHADOW_IT_DETECTED
+  // Alertas y IA
+  ALERT_CREATED
+  ALERT_ACCEPTED
+  ALERT_DISMISSED
+  AI_DRAFT_GENERATED
+  // Administración
+  MEMBER_INVITED
+  MEMBER_REMOVED
+  ROLE_CHANGED
+  // Datos
+  CSV_IMPORTED
+  DATA_EXPORTED
+}
+
+/// Estado de ciclo de vida de una alerta de optimización
+enum AlertStatus {
+  PENDING    // Generada por IA, sin revisar
+  ACCEPTED   // Aceptada por el administrador (acción iniciada)
+  DISMISSED  // Ignorada por el administrador
+  COMPLETED  // Acción completada y ahorro confirmado
+  EXPIRED    // La ventana de oportunidad venció sin acción
+}
+
+/// Tipo de optimización recomendada por el motor de IA
+enum AlertType {
+  INACTIVE_SEATS        // Licencias asignadas a usuarios inactivos
+  DUPLICATE_TOOL        // Herramienta duplicada con otra en el stack
+  RENEWAL_APPROACHING   // Renovación próxima — oportunidad de negociar
+  SHADOW_IT_FOUND       // Software detectado sin aprobación de IT
+  COST_ANOMALY          // Gasto anormal detectado respecto al histórico
+  LICENCE_DOWNGRADE     // Recomendación de bajar plan de licencia
+  CANCELLATION_CANDIDATE // Herramienta sin uso — candidata a cancelación
+}
+
+// ─────────────────────────────────────────────
+// MODELS — OAuth, Logs & Alerts
+// ─────────────────────────────────────────────
+
+/// Credencial OAuth almacenada por integración y organización.
+/// Los tokens se guardan cifrados (AES-256) a nivel de aplicación
+/// antes de persistirse — este modelo guarda el ciphertext, no el plaintext.
+model OAuthCredential {
+  id               String        @id @default(uuid())
+  organizationId   String        @map("organization_id")
+  organization     Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  provider         OAuthProvider
+
+  // Tokens cifrados con AES-256 a nivel de aplicación (Task 197)
+  accessTokenEnc   String        @map("access_token_enc")   // Ciphertext del access token
+  refreshTokenEnc  String?       @map("refresh_token_enc")  // Ciphertext del refresh token (nullable en algunos providers)
+
+  // Metadatos del token (no sensibles)
+  scope            String?                                   // Scopes concedidos (ej. "read:users email")
+  tokenType        String        @default("Bearer")         @map("token_type")
+  expiresAt        DateTime?     @map("expires_at")          // Expiración del access token
+  isActive         Boolean       @default(true)             @map("is_active")
+
+  // Datos de la cuenta/workspace conectada (identificadores externos)
+  externalAccountId String?      @map("external_account_id") // ID de cuenta del provider (ej. Google Workspace Customer ID)
+
+  createdAt        DateTime      @default(now())             @map("created_at")
+  updatedAt        DateTime      @updatedAt                  @map("updated_at")
+
+  // Una organización solo puede tener una credencial activa por provider
+  @@unique([organizationId, provider], name: "unique_org_provider")
+  @@index([organizationId])
+  @@index([provider])
+  @@index([expiresAt])
+  @@map("oauth_credentials")
+}
+
+/// Log inmutable de auditoría del sistema.
+/// Registra cada acción crítica realizada por usuarios o por el sistema automatizado.
+/// Los registros NUNCA se actualizan ni se borran (append-only).
+model ActivityLog {
+  id             String         @id @default(uuid())
+  organizationId String         @map("organization_id")
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Actor: puede ser un usuario humano o el sistema (agente IA, cron job)
+  userId         String?        @map("user_id")
+  user           User?          @relation("UserActivityLogs", fields: [userId], references: [id], onDelete: SetNull)
+  actorType      String         @default("user") @map("actor_type") // "user" | "system" | "ai_agent"
+
+  // Acción registrada
+  action         ActivityAction
+  entityType     String?        @map("entity_type")  // "subscription" | "user" | "integration" | etc.
+  entityId       String?        @map("entity_id")    // UUID de la entidad afectada
+
+  // Contexto adicional en JSON libre (metadatos variables por tipo de acción)
+  metadata       Json?
+
+  // Contexto de red (para auditoría de seguridad)
+  ipAddress      String?        @map("ip_address")
+  userAgent      String?        @map("user_agent")
+
+  // Los logs no tienen updatedAt — son inmutables por diseño
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@index([organizationId, action])
+  @@index([organizationId, createdAt])
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+/// Alerta de optimización generada por el motor de IA de Onniik.
+/// Cada alerta representa una oportunidad concreta de reducir costos o
+/// resolver un problema de Shadow IT / inactividad de licencias.
+model OptimizationAlert {
+  id               String            @id @default(uuid())
+  organizationId   String            @map("organization_id")
+  organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Suscripción SaaS asociada a la alerta (puede ser null para alertas globales)
+  subscriptionId   String?           @map("subscription_id")
+  subscription     SaaSSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  // Tipo y estado
+  alertType        AlertType         @map("alert_type")
+  status           AlertStatus       @default(PENDING)
+
+  // Contenido de la alerta
+  title            String                                     // Título corto (ej. "Slack: 12 asientos inactivos")
+  description      String                                     // Descripción detallada del problema detectado
+  recommendation   String                                     // Acción recomendada por el agente de IA
+
+  // Impacto financiero estimado por la IA
+  estimatedSavings Decimal?          @map("estimated_savings")  @db.Decimal(12, 2)
+  currency         String            @default("USD")
+
+  // Contexto de IA
+  aiModelVersion   String?           @map("ai_model_version")   // Versión del modelo usado (ej. "gpt-4o-mini")
+  confidenceScore  Float?            @map("confidence_score")   // Score de confianza [0.0 – 1.0]
+  aiRawResponse    Json?             @map("ai_raw_response")    // Respuesta cruda del LLM (para trazabilidad)
+
+  // Resolución
+  resolvedById     String?           @map("resolved_by_id")
+  resolvedBy       User?             @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt       DateTime?         @map("resolved_at")
+  resolutionNote   String?           @map("resolution_note")   // Nota del admin al aceptar/descartar
+
+  // Expiración (si no se actúa antes de esta fecha, pasa a EXPIRED)
+  expiresAt        DateTime?         @map("expires_at")
+
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, alertType])
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("optimization_alerts")
 }
