@@ -1,0 +1,42 @@
+#!/bin/sh
+# ============================================================
+# Onniik — Pre-commit Hook
+# Ejecuta lint-staged para validar y auto-formatear únicamente
+# los archivos staged antes de cada commit.
+#
+# Requiere: lint-staged instalado en el monorepo raíz
+# ============================================================
+
+# Determinar la raíz del repositorio Git
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+# Ejecutar lint-staged usando node desde la raíz del monorepo
+cd "$REPO_ROOT"
+
+# Buscar lint-staged en node_modules raíz o en backend (fallback)
+if [ -f "$REPO_ROOT/node_modules/.bin/lint-staged" ]; then
+  node "$REPO_ROOT/node_modules/.bin/lint-staged"
+elif [ -f "$REPO_ROOT/backend/node_modules/.bin/lint-staged" ]; then
+  node "$REPO_ROOT/backend/node_modules/.bin/lint-staged"
+else
+  # Fallback manual: ejecutar linters directamente si lint-staged no está disponible
+  echo "[Husky] lint-staged no encontrado. Ejecutando linters directamente..."
+
+  # Lint del backend (archivos TypeScript staged)
+  BACKEND_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep "^backend/src/.*\.ts$" | tr '\n' ' ')
+  if [ -n "$BACKEND_FILES" ]; then
+    echo "[Husky] Linting backend: $BACKEND_FILES"
+    node "$REPO_ROOT/backend/node_modules/.bin/eslint" $BACKEND_FILES || exit 1
+    node "$REPO_ROOT/backend/node_modules/.bin/prettier" --check $BACKEND_FILES || exit 1
+  fi
+
+  # Lint del frontend (archivos JS/CSS/HTML staged)
+  FRONTEND_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E "^frontend/src/.*\.(js|css|html)$" | tr '\n' ' ')
+  if [ -n "$FRONTEND_FILES" ]; then
+    echo "[Husky] Linting frontend: $FRONTEND_FILES"
+    node "$REPO_ROOT/frontend/node_modules/.bin/eslint" $FRONTEND_FILES || exit 1
+    node "$REPO_ROOT/frontend/node_modules/.bin/prettier" --check $FRONTEND_FILES || exit 1
+  fi
+
+  echo "[Husky] Pre-commit checks completados correctamente."
+fi
