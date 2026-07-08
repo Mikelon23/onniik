@@ -74,7 +74,7 @@
 - `[x]` **Tarea 67**: Configurar el Dockerfile para el Frontend en modo producción.
 - `[x]` **Tarea 68**: Crear y verificar una ruta de estado de salud del sistema (`/api/v1/health`) en el backend.
 - `[x]` **Tarea 69**: Configurar Husky para asegurar que se corra linter y pruebas antes de cada commit.
-- `[ ]` **Tarea 70**: Realizar una auditoría de dependencias inicial (`npm audit`) para mitigar vulnerabilidades.
+- `[x]` **Tarea 70**: Realizar una auditoría de dependencias inicial (`npm audit`) para mitigar vulnerabilidades.
 
 ## Base de Datos y Backend Core
 - `[ ]` **Tarea 71**: Extender el esquema de base de datos en Prisma para incluir las tablas `SaaSProduct` y `SaaSSubscription`.
