@@ -78,7 +78,7 @@
 
 ## Base de Datos y Backend Core
 - `[x]` **Tarea 71**: Extender el esquema de base de datos en Prisma para incluir las tablas `SaaSProduct` y `SaaSSubscription`.
-- `[ ]` **Tarea 72**: Agregar las tablas `OAuthCredential`, `ActivityLog` y `OptimizationAlert` al esquema.
+- `[x]` **Tarea 72**: Agregar las tablas `OAuthCredential`, `ActivityLog` y `OptimizationAlert` al esquema.
 - `[ ]` **Tarea 73**: Diseñar la relación entre la tabla de usuarios, suscripciones y las recomendaciones de ahorro de IA.
 - `[ ]` **Tarea 74**: Crear y ejecutar la migración del esquema completo de la base de datos de Onniik.
 - `[ ]` **Tarea 75**: Implementar el módulo de autenticación de usuarios mediante JWT (JSON Web Tokens).
