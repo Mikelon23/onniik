@@ -1,11 +1,14 @@
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 generator client {
   provider = "prisma-client-js"
 }
+
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
 
 enum Role {
   ADMIN
@@ -13,29 +16,157 @@ enum Role {
   IT_MANAGER
 }
 
+/// Categoría funcional del producto SaaS detectado
+enum SaaSCategory {
+  PRODUCTIVITY      // Notion, Confluence, Google Workspace
+  COMMUNICATION     // Slack, Zoom, Teams, Loom
+  DEVELOPMENT       // GitHub, GitLab, Linear, Jira
+  SALES_CRM         // Salesforce, HubSpot, Pipedrive
+  MARKETING         // Mailchimp, ActiveCampaign, Clearbit
+  DESIGN            // Figma, Canva, Adobe CC
+  FINANCE           // Expensify, Ramp, Brex, QuickBooks
+  HR_PEOPLE         // Lattice, Rippling, BambooHR
+  SECURITY          // 1Password, Okta, Snyk, Cloudflare
+  INFRASTRUCTURE    // AWS, GCP, Azure, Vercel, Netlify
+  ANALYTICS         // Mixpanel, Amplitude, PostHog, Datadog
+  CUSTOMER_SUCCESS  // Intercom, Zendesk, Crisp
+  OTHER             // Sin categoría determinada
+}
+
+/// Ciclo de facturación de la suscripción
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+  ONE_TIME
+  CUSTOM
+}
+
+/// Estado operacional de la suscripción dentro de la organización
+enum SubscriptionStatus {
+  ACTIVE          // Suscripción vigente y en uso
+  INACTIVE        // Detectada pero sin uso confirmado
+  CANCELLED       // Cancelada por el usuario o el agente de IA
+  PENDING_REVIEW  // Marcada para revisión por el equipo de IT
+  SHADOW_IT       // Detectada sin aprobación formal del equipo de IT
+}
+
+/// Fuente de detección de la suscripción
+enum DetectionSource {
+  GOOGLE_WORKSPACE  // Detectada vía API de Google Workspace
+  SLACK             // Detectada vía API de Slack Apps
+  EMAIL_SCAN        // Detectada vía escaneo de facturas en Gmail
+  CSV_IMPORT        // Importada manualmente vía CSV
+  MANUAL_ENTRY      // Ingresada manualmente por un administrador
+}
+
+// ─────────────────────────────────────────────
+// MODELS
+// ─────────────────────────────────────────────
+
 model Organization {
-  id                String    @id @default(uuid())
-  name              String
-  googleCustomerId  String?   @map("google_customer_id")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-  users             User[]
+  id               String             @id @default(uuid())
+  name             String
+  googleCustomerId String?            @map("google_customer_id")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  // Relaciones
+  users            User[]
+  subscriptions    SaaSSubscription[]
 
   @@map("organizations")
 }
 
 model User {
-  id             String       @id @default(uuid())
-  email          String       @unique
-  passwordHash   String       @map("password_hash")
+  id             String             @id @default(uuid())
+  email          String             @unique
+  passwordHash   String             @map("password_hash")
   name           String?
-  role           Role         @default(READER)
-  organizationId String       @map("organization_id")
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now()) @map("created_at")
-  updatedAt      DateTime     @updatedAt @map("updated_at")
+  role           Role               @default(READER)
+  organizationId String             @map("organization_id")
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime           @default(now()) @map("created_at")
+  updatedAt      DateTime           @updatedAt @map("updated_at")
+
+  // Relaciones
+  ownedSubscriptions SaaSSubscription[] @relation("SubscriptionOwner")
 
   @@index([organizationId])
   @@map("users")
 }
 
+/// Catálogo global de productos SaaS conocidos por Onniik.
+/// Representa la herramienta en sí (ej. "Slack", "GitHub"), no la suscripción.
+/// Es compartido entre todas las organizaciones.
+model SaaSProduct {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  slug        String       @unique
+  category    SaaSCategory @default(OTHER)
+  description String?
+  website     String?
+  logoUrl     String?      @map("logo_url")
+  vendor      String?
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  // Relaciones
+  subscriptions SaaSSubscription[]
+
+  @@index([category])
+  @@index([slug])
+  @@map("saas_products")
+}
+
+/// Suscripción activa (o histórica) de una organización a un producto SaaS.
+/// Es el núcleo del inventario de Onniik — cada fila representa un contrato
+/// o licencia que la organización tiene con un proveedor SaaS.
+model SaaSSubscription {
+  id               String             @id @default(uuid())
+  organizationId   String             @map("organization_id")
+  organization     Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  saasProductId    String             @map("saas_product_id")
+  saasProduct      SaaSProduct        @relation(fields: [saasProductId], references: [id], onDelete: Restrict)
+
+  // Responsable interno de la suscripción (puede ser null si es Shadow IT)
+  ownerId          String?            @map("owner_id")
+  owner            User?              @relation("SubscriptionOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  // Estado y clasificación
+  status           SubscriptionStatus @default(ACTIVE)
+  detectionSource  DetectionSource    @default(MANUAL_ENTRY) @map("detection_source")
+
+  // Información financiera
+  seatCount        Int?               @map("seat_count")
+  activeSeats      Int?               @map("active_seats")
+  costPerSeat      Decimal?           @map("cost_per_seat") @db.Decimal(10, 2)
+  totalMonthlyCost Decimal?           @map("total_monthly_cost") @db.Decimal(12, 2)
+  currency         String             @default("USD")
+  billingCycle     BillingCycle       @default(MONTHLY) @map("billing_cycle")
+
+  // Fechas del contrato
+  renewalDate      DateTime?          @map("renewal_date")
+  contractStart    DateTime?          @map("contract_start")
+  contractEnd      DateTime?          @map("contract_end")
+
+  // Metadatos de integración
+  externalId       String?            @map("external_id")
+  notes            String?
+
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  // Índices para queries de alto rendimiento en el Dashboard
+  @@index([organizationId])
+  @@index([organizationId, status])
+  @@index([organizationId, saasProductId])
+  @@index([renewalDate])
+  @@index([status])
+  @@index([detectionSource])
+
+  // Restricción de unicidad: evitar duplicados de misma org + producto + externalId
+  @@unique([organizationId, saasProductId, externalId], name: "unique_org_product_external")
+
+  @@map("saas_subscriptions")
+}
