@@ -81,7 +81,7 @@
 - `[x]` **Tarea 72**: Agregar las tablas `OAuthCredential`, `ActivityLog` y `OptimizationAlert` al esquema.
 - `[x]` **Tarea 73**: Diseñar la relación entre la tabla de usuarios, suscripciones y las recomendaciones de ahorro de IA.
 - `[x]` **Tarea 74**: Crear y ejecutar la migración del esquema completo de la base de datos de Onniik.
-- `[ ]` **Tarea 75**: Implementar el módulo de autenticación de usuarios mediante JWT (JSON Web Tokens).
+- `[x]` **Tarea 75**: Implementar el módulo de autenticación de usuarios mediante JWT (JSON Web Tokens).
 - `[ ]` **Tarea 76**: Crear las rutas de registro e inicio de sesión de usuario en el backend (`/api/v1/auth/register`, `/api/v1/auth/login`).
 - `[ ]` **Tarea 77**: Implementar el hashing de contraseñas de manera segura usando bcryptjs.
 - `[ ]` **Tarea 78**: Crear el middleware de verificación de JWT para rutas protegidas del backend.
