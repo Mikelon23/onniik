@@ -81,6 +81,15 @@ model Organization {
   @@map("organizations")
 }
 
+/// Usuario de la plataforma Onniik.
+///
+/// Relaciones con el motor de recomendaciones IA (Tarea 73):
+///   - ownedSubscriptions : suscripciones de las que este usuario es responsable
+///   - triggeredAlerts    : alertas cuya detección fue iniciada manualmente por este usuario
+///                          (a diferencia de las generadas automáticamente por el sistema IA,
+///                          donde triggeredByUserId es NULL)
+///   - resolvedAlerts     : alertas que este usuario aceptó o descartó
+///   - activityLogs       : historial de acciones auditables
 model User {
   id             String             @id @default(uuid())
   email          String             @unique
@@ -95,7 +104,8 @@ model User {
   // Relaciones
   ownedSubscriptions SaaSSubscription[]  @relation("SubscriptionOwner")
   activityLogs       ActivityLog[]        @relation("UserActivityLogs")
-  resolvedAlerts     OptimizationAlert[]  @relation("AlertResolver")
+  triggeredAlerts    OptimizationAlert[]  @relation("AlertTrigger")    // Alertas iniciadas manualmente por el usuario
+  resolvedAlerts     OptimizationAlert[]  @relation("AlertResolver")   // Alertas resueltas (aceptadas/descartadas)
 
   @@index([organizationId])
   @@map("users")
@@ -233,13 +243,23 @@ enum AlertStatus {
 
 /// Tipo de optimización recomendada por el motor de IA
 enum AlertType {
-  INACTIVE_SEATS        // Licencias asignadas a usuarios inactivos
-  DUPLICATE_TOOL        // Herramienta duplicada con otra en el stack
-  RENEWAL_APPROACHING   // Renovación próxima — oportunidad de negociar
-  SHADOW_IT_FOUND       // Software detectado sin aprobación de IT
-  COST_ANOMALY          // Gasto anormal detectado respecto al histórico
-  LICENCE_DOWNGRADE     // Recomendación de bajar plan de licencia
+  INACTIVE_SEATS         // Licencias asignadas a usuarios inactivos
+  DUPLICATE_TOOL         // Herramienta duplicada con otra en el stack
+  RENEWAL_APPROACHING    // Renovación próxima — oportunidad de negociar
+  SHADOW_IT_FOUND        // Software detectado sin aprobación de IT
+  COST_ANOMALY           // Gasto anormal detectado respecto al histórico
+  LICENCE_DOWNGRADE      // Recomendación de bajar plan de licencia
   CANCELLATION_CANDIDATE // Herramienta sin uso — candidata a cancelación
+}
+
+/// Prioridad de la alerta de optimización generada por el motor de IA.
+/// Permite al dashboard ordenar y destacar las oportunidades de mayor impacto.
+/// Calculada por el LLM en función del ahorro estimado, urgencia y tipo.
+enum AlertPriority {
+  LOW      // Ahorro < $100/mes o impacto menor
+  MEDIUM   // Ahorro entre $100–$500/mes o riesgo moderado
+  HIGH     // Ahorro > $500/mes o riesgo de seguridad (Shadow IT)
+  CRITICAL // Ahorro > $2000/mes, contrato por vencer o brecha de IT urgente
 }
 
 // ─────────────────────────────────────────────
@@ -318,52 +338,112 @@ model ActivityLog {
 }
 
 /// Alerta de optimización generada por el motor de IA de Onniik.
-/// Cada alerta representa una oportunidad concreta de reducir costos o
-/// resolver un problema de Shadow IT / inactividad de licencias.
+///
+/// ──────────────────────────────────────────────────────────────
+/// FLUJO COMPLETO DE RECOMENDACIÓN DE AHORRO IA (Tarea 73)
+/// ──────────────────────────────────────────────────────────────
+///
+/// El motor de IA de Onniik genera alertas a través del siguiente pipeline:
+///
+///   1. DETECCIÓN (automática o manual)
+///      ┌─────────────────────────────────────────────────────────┐
+///      │ Sistema IA / Cron job / Usuario (triggeredByUserId)      │
+///      │   ↓ analiza                                              │
+///      │ SaaSSubscription (status, seatCount, activeSeats, cost)  │
+///      │   + User (rol, última actividad via integración)          │
+///      └─────────────────────────────────────────────────────────┘
+///
+///   2. CREACIÓN DE ALERTA
+///      La IA genera un OptimizationAlert con:
+///        - alertType    : clasifica la oportunidad (INACTIVE_SEATS, etc.)
+///        - priority     : LOW / MEDIUM / HIGH / CRITICAL
+///        - estimatedSavings : ahorro proyectado en USD/mes
+///        - confidenceScore  : [0.0 – 1.0] confianza del modelo
+///        - aiModelVersion   : versión del LLM usado
+///        - triggeredByUserId: NULL si fue el sistema; UUID si fue manual
+///
+///   3. REVISIÓN HUMANA (Human-in-the-loop)
+///      El administrador (resolvedBy) revisa la alerta y la:
+///        - ACEPTA  → resolvedAt + resolutionNote + status = ACCEPTED
+///        - DESCARTA → status = DISMISSED + resolutionNote
+///        - IGNORA hasta expiresAt → status = EXPIRED (cron job)
+///
+///   4. CONFIRMACIÓN DE AHORRO
+///      Tras ejecutar la acción (cancelar, negociar, downgrade):
+///        - status = COMPLETED
+///        - El ahorro real se registra en ActivityLog
+/// ──────────────────────────────────────────────────────────────
+///
+/// QUERIES CRÍTICAS SOPORTADAS POR LOS ÍNDICES:
+///   a) Dashboard KPI: "Total ahorro potencial PENDING por org"
+///      → WHERE organizationId = ? AND status = 'PENDING'
+///        ORDER BY estimated_savings DESC
+///      → Índice: [organizationId, status, estimatedSavings]
+///
+///   b) Panel de alertas: "Alertas por tipo en una org"
+///      → WHERE organizationId = ? AND alertType = ?
+///      → Índice: [organizationId, alertType]
+///
+///   c) Expiración automática: "Alertas PENDING sin acción"
+///      → WHERE status = 'PENDING' AND expiresAt <= NOW()
+///      → Índice: [status, expiresAt]
+///
 model OptimizationAlert {
   id               String            @id @default(uuid())
   organizationId   String            @map("organization_id")
   organization     Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  // Suscripción SaaS asociada a la alerta (puede ser null para alertas globales)
+  // Suscripción SaaS asociada a la alerta (puede ser null para alertas globales de org)
   subscriptionId   String?           @map("subscription_id")
   subscription     SaaSSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
 
-  // Tipo y estado
+  // Actor que originó la alerta:
+  // NULL  → generada automáticamente por el motor de IA / cron job
+  // UUID  → iniciada manualmente por un usuario administrador o IT Manager
+  triggeredByUserId String?          @map("triggered_by_user_id")
+  triggeredBy       User?            @relation("AlertTrigger", fields: [triggeredByUserId], references: [id], onDelete: SetNull)
+
+  // Tipo, prioridad y estado
   alertType        AlertType         @map("alert_type")
+  priority         AlertPriority     @default(MEDIUM)
   status           AlertStatus       @default(PENDING)
 
   // Contenido de la alerta
-  title            String                                     // Título corto (ej. "Slack: 12 asientos inactivos")
-  description      String                                     // Descripción detallada del problema detectado
-  recommendation   String                                     // Acción recomendada por el agente de IA
+  title            String            // Título corto (ej. "Slack: 12 asientos inactivos")
+  description      String            // Descripción detallada del problema detectado
+  recommendation   String            // Acción recomendada por el agente de IA
 
   // Impacto financiero estimado por la IA
-  estimatedSavings Decimal?          @map("estimated_savings")  @db.Decimal(12, 2)
+  estimatedSavings Decimal?          @map("estimated_savings") @db.Decimal(12, 2)
   currency         String            @default("USD")
 
-  // Contexto de IA
-  aiModelVersion   String?           @map("ai_model_version")   // Versión del modelo usado (ej. "gpt-4o-mini")
-  confidenceScore  Float?            @map("confidence_score")   // Score de confianza [0.0 – 1.0]
-  aiRawResponse    Json?             @map("ai_raw_response")    // Respuesta cruda del LLM (para trazabilidad)
+  // Contexto de IA (trazabilidad del modelo usado)
+  aiModelVersion   String?           @map("ai_model_version")  // ej. "gpt-4o-mini", "claude-3-haiku"
+  confidenceScore  Float?            @map("confidence_score")  // Score de confianza [0.0 – 1.0]
+  aiRawResponse    Json?             @map("ai_raw_response")   // Respuesta cruda del LLM (para auditoría)
 
-  // Resolución
+  // Resolución humana (Human-in-the-loop)
   resolvedById     String?           @map("resolved_by_id")
   resolvedBy       User?             @relation("AlertResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
   resolvedAt       DateTime?         @map("resolved_at")
-  resolutionNote   String?           @map("resolution_note")   // Nota del admin al aceptar/descartar
+  resolutionNote   String?           @map("resolution_note")  // Nota del admin al aceptar/descartar
 
-  // Expiración (si no se actúa antes de esta fecha, pasa a EXPIRED)
+  // Expiración: si no se actúa antes de esta fecha → cron job la marca EXPIRED
   expiresAt        DateTime?         @map("expires_at")
 
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
 
+  // ── Índices para queries de Dashboard e IA ──────────────────
   @@index([organizationId])
   @@index([organizationId, status])
   @@index([organizationId, alertType])
+  @@index([organizationId, status, estimatedSavings], name: "optimization_alerts_dashboard_idx") // Query KPI dashboard
+  @@index([status, expiresAt], name: "optimization_alerts_expiry_idx")                          // Cron de expiración
   @@index([subscriptionId])
+  @@index([triggeredByUserId])
   @@index([status])
+  @@index([priority])
   @@index([expiresAt])
   @@map("optimization_alerts")
 }
