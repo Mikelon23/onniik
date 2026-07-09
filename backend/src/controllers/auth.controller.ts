@@ -1,69 +1,62 @@
 import { Request, Response, NextFunction } from 'express';
-import bcryptjs from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import prisma from '../config/db';
+import { AuthService } from '../services/auth.service';
 import { BadRequestError, UnauthorizedError } from '../errors/AppError';
+import { LoginDto, UserPublicProfile } from '../types/auth.types';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 
 /**
- * Inicia sesión de un usuario y establece la cookie JWT HttpOnly
+ * POST /api/v1/auth/login
+ * Autentica un usuario con email y contraseña.
+ * Establece una cookie JWT HttpOnly en caso de éxito.
  */
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body as LoginDto;
 
     if (!email || !password) {
       throw new BadRequestError('El email y la contraseña son requeridos.');
     }
 
-    // Buscar al usuario por correo electrónico
+    // 1. Buscar al usuario por correo electrónico
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
+    // Respuesta genérica para no revelar si el email existe o no (prevención de enumeración)
     if (!user) {
       throw new UnauthorizedError('Credenciales de acceso inválidas.');
     }
 
-    // Verificar la contraseña cifrada
-    const isPasswordValid = await bcryptjs.compare(password, user.passwordHash);
+    // 2. Verificar contraseña con bcrypt (comparación de tiempo constante)
+    const isPasswordValid = await AuthService.comparePassword(password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedError('Credenciales de acceso inválidas.');
     }
 
-    // Firmar el token JWT
-    const secret = process.env.NEXTAUTH_SECRET || 'ejemplo_hash_secreto_muy_largo_de_32_caracteres';
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        organizationId: user.organizationId,
-      },
-      secret,
-      { expiresIn: '1d' }
-    );
-
-    // Establecer la cookie de sesión HttpOnly segura
-    const isProd = process.env.NODE_ENV === 'production';
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: isProd,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 1 día
+    // 3. Generar token JWT firmado
+    const token = AuthService.generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId,
     });
+
+    // 4. Establecer cookie de sesión HttpOnly
+    res.cookie('token', token, AuthService.getCookieOptions());
+
+    // 5. Responder con el perfil público del usuario
+    const profile: UserPublicProfile = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      organizationId: user.organizationId,
+    };
 
     res.status(200).json({
       status: 'success',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          organizationId: user.organizationId,
-        },
-      },
+      data: { user: profile },
     });
   } catch (error) {
     next(error);
@@ -71,14 +64,18 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
 };
 
 /**
- * Cierra la sesión del usuario limpiando la cookie JWT
+ * POST /api/v1/auth/logout
+ * Cierra la sesión del usuario limpiando la cookie JWT.
+ * Requiere autenticación previa (requireAuth middleware).
  */
 export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
+    // Limpiar la cookie con las mismas opciones con las que fue creada
+    const cookieOptions = AuthService.getCookieOptions();
     res.clearCookie('token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      httpOnly: cookieOptions.httpOnly,
+      secure: cookieOptions.secure,
+      sameSite: cookieOptions.sameSite,
     });
 
     res.status(200).json({
@@ -91,7 +88,9 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
 };
 
 /**
- * Retorna el perfil del usuario autenticado actualmente
+ * GET /api/v1/auth/me
+ * Retorna el perfil actualizado del usuario autenticado actualmente.
+ * Requiere autenticación previa (requireAuth middleware).
  */
 export const getMe = async (
   req: AuthenticatedRequest,
@@ -108,9 +107,7 @@ export const getMe = async (
       where: { id: req.user.id },
       include: {
         organization: {
-          select: {
-            name: true,
-          },
+          select: { name: true },
         },
       },
     });
@@ -119,18 +116,18 @@ export const getMe = async (
       throw new UnauthorizedError('El usuario no existe en el sistema.');
     }
 
+    const profile: UserPublicProfile = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      organizationId: user.organizationId,
+      organizationName: user.organization.name,
+    };
+
     res.status(200).json({
       status: 'success',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          organizationId: user.organizationId,
-          organizationName: user.organization.name,
-        },
-      },
+      data: { user: profile },
     });
   } catch (error) {
     next(error);
