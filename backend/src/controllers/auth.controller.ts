@@ -1,9 +1,110 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/db';
 import { AuthService } from '../services/auth.service';
-import { BadRequestError, UnauthorizedError } from '../errors/AppError';
-import { LoginDto, UserPublicProfile } from '../types/auth.types';
+import { BadRequestError, UnauthorizedError, ConflictError } from '../errors/AppError';
+import { LoginDto, RegisterDto, UserPublicProfile } from '../types/auth.types';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+
+// Regex de validación de email básico (RFC 5322 simplificado)
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * POST /api/v1/auth/register
+ * Registra un nuevo usuario en una organización existente.
+ *
+ * Validaciones aplicadas:
+ *   - Campos requeridos: email, password, organizationId
+ *   - Formato de email válido
+ *   - Contraseña: mínimo 8 caracteres, al menos 1 letra y 1 dígito
+ *   - La organización debe existir
+ *   - El email no debe estar ya registrado
+ *
+ * En caso de éxito, auto-inicia sesión estableciendo la cookie JWT HttpOnly.
+ */
+export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email, password, name, organizationId } = req.body as RegisterDto;
+
+    // ── 1. Validación de campos requeridos ────────────────────────────
+    if (!email || !password || !organizationId) {
+      throw new BadRequestError('Email, contraseña y organizationId son campos requeridos.');
+    }
+
+    // ── 2. Validación de formato de email ─────────────────────────────
+    if (!EMAIL_REGEX.test(email)) {
+      throw new BadRequestError('El formato del email proporcionado no es válido.');
+    }
+
+    // ── 3. Validación de fortaleza de contraseña ──────────────────────
+    // Mínimo 8 chars, al menos 1 letra y 1 dígito
+    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+      throw new BadRequestError(
+        'La contraseña debe tener al menos 8 caracteres, incluir una letra y un número.'
+      );
+    }
+
+    // ── 4. Verificar que la organización existe ───────────────────────
+    const organization = await prisma.organization.findUnique({
+      where: { id: organizationId },
+      select: { id: true, name: true },
+    });
+
+    if (!organization) {
+      throw new BadRequestError('La organización especificada no existe.');
+    }
+
+    // ── 5. Verificar que el email no está ya registrado ───────────────
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      throw new ConflictError('Ya existe una cuenta registrada con este correo electrónico.');
+    }
+
+    // ── 6. Hashear contraseña con bcrypt (12 rondas) ──────────────────
+    const passwordHash = await AuthService.hashPassword(password);
+
+    // ── 7. Crear el usuario en la base de datos ───────────────────────
+    const user = await prisma.user.create({
+      data: {
+        email: email.toLowerCase().trim(),
+        passwordHash,
+        name: name?.trim() ?? null,
+        organizationId,
+        role: 'READER', // Los nuevos usuarios comienzan con el rol más restrictivo
+      },
+    });
+
+    // ── 8. Auto-login: generar token JWT y establecer cookie ──────────
+    const token = AuthService.generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      organizationId: user.organizationId,
+    });
+
+    res.cookie('token', token, AuthService.getCookieOptions());
+
+    // ── 9. Responder con el perfil del usuario creado ─────────────────
+    const profile: UserPublicProfile = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      organizationId: user.organizationId,
+      organizationName: organization.name,
+    };
+
+    res.status(201).json({
+      status: 'success',
+      data: { user: profile },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 /**
  * POST /api/v1/auth/login
