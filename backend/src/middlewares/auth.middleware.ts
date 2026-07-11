@@ -50,21 +50,22 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
 };
 
 /**
- * Middleware de autorización basado en roles (RBAC).
+ * Middleware de autorización basado en roles (RBAC) — nivel básico.
  *
- * Debe usarse DESPUÉS de `requireAuth`. Verifica que el usuario autenticado
- * tenga al menos uno de los roles permitidos.
+ * Verifica que el usuario autenticado tenga al menos uno de los roles permitidos.
+ * Debe usarse DESPUÉS de `requireAuth`.
  *
- * Uso:
- *   router.delete('/admin-only', requireAuth, requireRole('ADMIN'), myController);
- *   router.get('/it-or-admin', requireAuth, requireRole('ADMIN', 'IT_MANAGER'), myController);
+ * Para control granular por permisos y middlewares de conveniencia,
+ * importar desde `rbac.middleware.ts`:
+ *   - requireAdmin, requireItManager, requireAdminOrItManager
+ *   - requirePermission(Permission.XXX)
+ *   - requireCanManageAlerts, requireCanManageSubscriptions, etc.
  *
  * @param allowedRoles - Uno o más roles permitidos para acceder a la ruta
- * @throws {UnauthorizedError} Si `req.user` no está definido (requireAuth no fue aplicado antes)
- * @throws {ForbiddenError} Si el rol del usuario no está entre los permitidos
  *
- * @note La implementación completa de RBAC se realiza en la Tarea 79.
- *       Este middleware es el punto de extensión para dicha tarea.
+ * @example
+ * router.delete('/admin-only', requireAuth, requireRole('ADMIN'), controller);
+ * router.get('/it-or-admin', requireAuth, requireRole('ADMIN', 'IT_MANAGER'), controller);
  */
 export const requireRole = (...allowedRoles: JwtPayload['role'][]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {

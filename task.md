@@ -85,7 +85,7 @@
 - `[x]` **Tarea 76**: Crear las rutas de registro e inicio de sesión de usuario en el backend (`/api/v1/auth/register`, `/api/v1/auth/login`).
 - `[x]` **Tarea 77**: Implementar el hashing de contraseñas de manera segura usando bcryptjs.
 - `[x]` **Tarea 78**: Crear el middleware de verificación de JWT para rutas protegidas del backend.
-- `[ ]` **Tarea 79**: Crear el sistema de Roles de Usuario en el backend (RBAC: Admin, Reader, IT Manager).
+- `[x]` **Tarea 79**: Crear el sistema de Roles de Usuario en el backend (RBAC: Admin, Reader, IT Manager).
 - `[ ]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
 - `[ ]` **Tarea 81**: Implementar la API de CRUD para los productos de software detectados (`/api/v1/saas`).
 - `[ ]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
