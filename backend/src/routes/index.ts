@@ -2,6 +2,7 @@ import { Router } from 'express';
 import healthRoutes from './health.routes';
 import authRoutes from './auth.routes';
 import orgRoutes from './org.routes';
+import saasRoutes from './saas.routes';
 
 const router = Router();
 
@@ -10,6 +11,7 @@ const v1Router = Router();
 v1Router.use('/health', healthRoutes);
 v1Router.use('/auth', authRoutes);
 v1Router.use('/orgs', orgRoutes); // Tarea 80: gestión de organizaciones
+v1Router.use('/saas', saasRoutes); // Tarea 81: inventario SaaS (productos y suscripciones)
 
 router.use('/v1', v1Router);
 
