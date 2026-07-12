@@ -88,7 +88,7 @@
 - `[x]` **Tarea 79**: Crear el sistema de Roles de Usuario en el backend (RBAC: Admin, Reader, IT Manager).
 - `[x]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
 - `[x]` **Tarea 81**: Implementar la API de CRUD para los productos de software detectados (`/api/v1/saas`).
-- `[ ]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
+- `[x]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
 - `[ ]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
 - `[ ]` **Tarea 84**: Crear el servicio de auditoría de logs para registrar cada acción crítica de la plataforma.
 - `[ ]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).

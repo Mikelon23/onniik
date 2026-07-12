@@ -9,12 +9,18 @@
  * Todos los controladores delegan la lógica de negocio a saas.service.ts.
  * El control de acceso por roles (RBAC) se aplica en la capa de rutas.
  *
- * Tarea 81 — /api/v1/saas
+ * Tarea 81 — /api/v1/saas (CRUD base de productos y suscripciones)
+ * Tarea 82 — /api/v1/saas/subscriptions/:id/status (cambio de estado)
+ *            /api/v1/saas/subscriptions/summary    (KPIs para el Dashboard)
  */
 
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
-import { SaaSProductService, SaaSSubscriptionService } from '../services/saas.service';
+import {
+  SaaSProductService,
+  SaaSSubscriptionService,
+  UpdateStatusDto,
+} from '../services/saas.service';
 import { BadRequestError } from '../errors/AppError';
 import { SaaSCategory, BillingCycle, SubscriptionStatus, DetectionSource } from '@prisma/client';
 
@@ -414,6 +420,113 @@ export const deleteSubscription = async (
       status: 'success',
       message: `Suscripción de "${deleted.productName}" eliminada exitosamente.`,
       data: { id: deleted.id },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ═════════════════════════════════════════════
+// Tarea 82 — Estado de suscripciones
+// ═════════════════════════════════════════════
+
+/**
+ * PATCH /api/v1/saas/subscriptions/:id/status
+ * Cambia el estado de una suscripción con validación de transiciones.
+ *
+ * Body requerido: { status: SubscriptionStatus }
+ * Body opcional:  { reason: string }
+ *
+ * Valida la máquina de estados — CANCELLED es estado terminal.
+ *
+ * Acceso: ADMIN, IT_MANAGER
+ *
+ * @example
+ * PATCH /api/v1/saas/subscriptions/uuid/status
+ * { "status": "CANCELLED", "reason": "Herramienta sin uso en los últimos 90 días" }
+ */
+export const updateSubscriptionStatus = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const orgId = req.user!.organizationId;
+    const { id } = req.params as Record<string, string>;
+    const { status, reason } = req.body as UpdateStatusDto;
+
+    if (!status) {
+      throw new BadRequestError('El campo status es requerido.');
+    }
+
+    if (!Object.values(SubscriptionStatus).includes(status as SubscriptionStatus)) {
+      throw new BadRequestError(
+        `Estado inválido. Valores permitidos: ${Object.values(SubscriptionStatus).join(', ')}`
+      );
+    }
+
+    const result = await SaaSSubscriptionService.updateSubscriptionStatus(id, orgId, {
+      status,
+      reason,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: `Estado de suscripción actualizado: ${result.transition.from} → ${result.transition.to}.`,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/v1/saas/subscriptions/summary
+ * Retorna un resumen de KPIs de suscripciones agrupadas por estado.
+ *
+ * Datos retornados:
+ *   - summary: conteos y métricas financieras por cada SubscriptionStatus
+ *   - kpis: totales globales para el Dashboard principal
+ *
+ * IMPORTANTE: esta ruta debe registrarse ANTES de /subscriptions/:id
+ * en el router para que Express no interprete "summary" como un UUID.
+ *
+ * Acceso: todos los roles autenticados
+ *
+ * @example
+ * // Response 200
+ * {
+ *   "status": "success",
+ *   "data": {
+ *     "summary": {
+ *       "ACTIVE":   { "count": 12, "totalMonthlyCost": 4500, "totalSeats": 80, "activeSeats": 65 },
+ *       "INACTIVE": { "count": 3,  "totalMonthlyCost": 0,    "totalSeats": 15, "activeSeats": 0  },
+ *       "SHADOW_IT":{ "count": 2,  "totalMonthlyCost": 0,    "totalSeats": 0,  "activeSeats": 0  }
+ *     },
+ *     "kpis": {
+ *       "totalSubscriptions": 17,
+ *       "activeCount": 12,
+ *       "totalMonthlySpend": 4500,
+ *       "shadowItCount": 2,
+ *       "pendingReviewCount": 0,
+ *       "inactiveCount": 3,
+ *       "cancelledCount": 0
+ *     }
+ *   }
+ * }
+ */
+export const getSubscriptionStatusSummary = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const orgId = req.user!.organizationId;
+    const result = await SaaSSubscriptionService.getSubscriptionStatusSummary(orgId);
+
+    res.status(200).json({
+      status: 'success',
+      data: result,
     });
   } catch (error) {
     next(error);
