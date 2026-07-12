@@ -91,7 +91,7 @@
 - `[x]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
 - `[x]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
 - `[x]` **Tarea 84**: Crear el servicio de auditoría de logs para registrar cada acción crítica de la plataforma.
-- `[ ]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
+- `[x]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
 - `[ ]` **Tarea 86**: Implementar el sistema de aceptación de invitación y vinculación de cuentas de usuario.
 - `[ ]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
 - `[ ]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.

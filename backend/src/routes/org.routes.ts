@@ -4,19 +4,25 @@
  *
  * Base path: /api/v1/orgs
  *
- * ┌─────────────────────────────────────────────────────────────────────────┐
- * │  Método  │ Ruta                 │ Middleware                │ Descripción │
- * ├──────────┼──────────────────────┼───────────────────────────┼─────────────┤
- * │  GET     │ /me                  │ requireAuth               │ Perfil de org del usuario │
- * │  PATCH   │ /me                  │ requireAuth + requireAdmin │ Actualizar nombre de org  │
- * │  GET     │ /me/members          │ requireAuth + requireAdminOrItManager │ Listar miembros │
- * └──────────┴──────────────────────┴───────────────────────────┴─────────────┘
+ * ┌─────────┬───────────────────────┬───────────────────────────┬────────────────────────────────┐
+ * │ Método  │ Ruta                  │ Middleware                │ Descripción                    │
+ * ├─────────┼───────────────────────┼───────────────────────────┼────────────────────────────────┤
+ * │ GET     │ /me                   │ requireAuth               │ Perfil de org del usuario       │
+ * │ PATCH   │ /me                   │ requireAuth + ADMIN       │ Actualizar nombre de org        │
+ * │ GET     │ /me/members           │ requireAuth + ADMIN/ITM   │ Listar miembros                 │
+ * │ POST    │ /invite               │ requireAuth + ADMIN       │ Invitar nuevo miembro (T85)     │
+ * └─────────┴───────────────────────┴───────────────────────────┴────────────────────────────────┘
  *
- * Tarea 80 — /api/v1/orgs
+ * Tareas 80, 85 — /api/v1/orgs
  */
 
 import { Router } from 'express';
-import { getMyOrg, updateMyOrg, getMyOrgMembers } from '../controllers/org.controller';
+import {
+  getMyOrg,
+  updateMyOrg,
+  getMyOrgMembers,
+  inviteMember,
+} from '../controllers/org.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
 
@@ -36,5 +42,12 @@ router.patch('/me', requireAuth, requireAdmin, updateMyOrg);
 // Lista todos los miembros (usuarios) de la organización con sus roles.
 // Accesible por ADMIN e IT_MANAGER. READER no tiene visibilidad del directorio.
 router.get('/me/members', requireAuth, requireAdminOrItManager, getMyOrgMembers);
+
+// ── POST /api/v1/orgs/invite ─────────────────────────────────────────────────
+// Invita a un nuevo miembro a la organización creando su cuenta con una
+// contraseña temporal y un token de invitación (72h) para T86.
+// IMPORTANTE: debe ir ANTES de rutas dinámicas /me/* para evitar conflictos.
+// Acceso: solo ADMIN.
+router.post('/invite', requireAuth, requireAdmin, inviteMember);
 
 export default router;
