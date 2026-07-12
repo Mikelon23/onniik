@@ -14,7 +14,10 @@
  */
 
 import prisma from '../config/db';
-import { NotFoundError } from '../errors/AppError';
+import { NotFoundError, ConflictError, BadRequestError } from '../errors/AppError';
+import { Role } from '@prisma/client';
+import { AuthService } from './auth.service';
+import crypto from 'crypto';
 
 // ─────────────────────────────────────────────
 // DTOs de entrada
@@ -24,6 +27,35 @@ import { NotFoundError } from '../errors/AppError';
 export interface UpdateOrgDto {
   /** Nuevo nombre de la organización */
   name?: string;
+}
+
+/** Datos necesarios para invitar a un nuevo miembro */
+export interface InviteMemberDto {
+  /** Email del nuevo miembro (debe ser único en el sistema) */
+  email: string;
+  /** Nombre completo del nuevo miembro (opcional) */
+  name?: string;
+  /** Rol que se asignará al nuevo miembro (default: READER) */
+  role?: Role;
+}
+
+/** Resultado de la invitación — incluye el token de activación para T86 */
+export interface InviteResult {
+  /** Perfil público del usuario recién creado */
+  member: OrgMemberProfile;
+  /**
+   * Token de invitación firmado con JWT (scope: 'invite').
+   * El invitado debe usarlo en POST /api/v1/orgs/invite/accept (T86)
+   * para establecer su contraseña definitiva.
+   * Expira en 72 horas.
+   */
+  inviteToken: string;
+  /**
+   * Contraseña temporal generada (solo presente en la respuesta de invitación).
+   * Debe compartirse con el invitado de forma segura.
+   * El invitado deberá cambiarla al aceptar la invitación (T86).
+   */
+  temporaryPassword: string;
 }
 
 // ─────────────────────────────────────────────
@@ -196,5 +228,118 @@ export const OrgService = {
       role: m.role,
       joinedAt: m.createdAt,
     }));
+  },
+
+  /**
+   * Invita a un nuevo miembro a la organización.
+   *
+   * Flujo:
+   *   1. Valida que el email no esté ya registrado en el sistema.
+   *   2. Genera una contraseña temporal segura (12 chars, aleatoria).
+   *   3. Crea el usuario con la contraseña temporal hasheada.
+   *   4. Genera un token JWT de invitación (scope: 'invite', expira en 72h).
+   *   5. Devuelve el perfil del nuevo miembro + token + contraseña temporal.
+   *
+   * El token de invitación se usará en T86 (POST /api/v1/orgs/invite/accept)
+   * para que el invitado establezca su contraseña definitiva.
+   *
+   * NOTA: La contraseña temporal se devuelve en texto plano UNA SOLA VEZ.
+   * El administrador debe compartirla de forma segura con el invitado.
+   * Cuando esté disponible el servicio de email (T91-92), este campo
+   * será reemplazado por un envío automático al correo del invitado.
+   *
+   * @param orgId      - UUID de la organización (del JWT del administrador)
+   * @param inviterId  - UUID del administrador que realiza la invitación
+   * @param dto        - Datos del nuevo miembro (email, nombre, rol)
+   *
+   * @throws {NotFoundError}  Si la organización no existe
+   * @throws {ConflictError}  Si el email ya está registrado en el sistema
+   * @throws {BadRequestError} Si el rol es inválido
+   */
+  async inviteMember(
+    orgId: string,
+    inviterId: string,
+    dto: InviteMemberDto
+  ): Promise<InviteResult> {
+    // 1. Verificar que la organización existe
+    const org = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { id: true, name: true },
+    });
+
+    if (!org) {
+      throw new NotFoundError('La organización especificada no existe.');
+    }
+
+    // 2. Validar que el email no esté ya registrado
+    const existingUser = await prisma.user.findUnique({
+      where: { email: dto.email.toLowerCase().trim() },
+      select: { id: true, organizationId: true },
+    });
+
+    if (existingUser) {
+      if (existingUser.organizationId === orgId) {
+        throw new ConflictError('Este email ya pertenece a un miembro de tu organización.');
+      }
+      throw new ConflictError('Este email ya está registrado en el sistema de Onniik.');
+    }
+
+    // 3. Validar que el rol es válido (si se especificó)
+    const allowedRoles: Role[] = [Role.ADMIN, Role.IT_MANAGER, Role.READER];
+    const assignedRole = dto.role ?? Role.READER;
+    if (!allowedRoles.includes(assignedRole)) {
+      throw new BadRequestError(`Rol inválido. Valores permitidos: ${allowedRoles.join(', ')}`);
+    }
+
+    // 4. Generar contraseña temporal segura (16 chars hexadecimal)
+    const temporaryPassword = crypto.randomBytes(8).toString('hex'); // 16 chars hex
+
+    // 5. Hashear la contraseña temporal
+    const passwordHash = await AuthService.hashPassword(temporaryPassword);
+
+    // 6. Crear el usuario en la base de datos
+    const newUser = await prisma.user.create({
+      data: {
+        email: dto.email.toLowerCase().trim(),
+        passwordHash,
+        name: dto.name?.trim() ?? null,
+        role: assignedRole,
+        organizationId: orgId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    // 7. Generar token de invitación (JWT con scope restrictivo, 72h)
+    // El payload incluye scope: 'invite' para que T86 pueda validar
+    // que este token solo sirve para aceptar invitaciones
+    const inviteToken = AuthService.generateToken(
+      {
+        id: newUser.id,
+        email: newUser.email,
+        role: newUser.role,
+        organizationId: orgId,
+      },
+      { expiresIn: '72h' }
+    );
+
+    const member: OrgMemberProfile = {
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      joinedAt: newUser.createdAt,
+    };
+
+    return {
+      member,
+      inviteToken,
+      temporaryPassword,
+    };
   },
 };
