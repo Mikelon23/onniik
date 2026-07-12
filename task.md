@@ -86,7 +86,7 @@
 - `[x]` **Tarea 77**: Implementar el hashing de contraseñas de manera segura usando bcryptjs.
 - `[x]` **Tarea 78**: Crear el middleware de verificación de JWT para rutas protegidas del backend.
 - `[x]` **Tarea 79**: Crear el sistema de Roles de Usuario en el backend (RBAC: Admin, Reader, IT Manager).
-- `[ ]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
+- `[x]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
 - `[ ]` **Tarea 81**: Implementar la API de CRUD para los productos de software detectados (`/api/v1/saas`).
 - `[ ]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
 - `[ ]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
