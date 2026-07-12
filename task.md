@@ -89,7 +89,7 @@
 - `[x]` **Tarea 80**: Crear controladores y rutas para gestionar la información de la organización (`/api/v1/orgs`).
 - `[x]` **Tarea 81**: Implementar la API de CRUD para los productos de software detectados (`/api/v1/saas`).
 - `[x]` **Tarea 82**: Implementar la API para consultar y actualizar el estado de las suscripciones.
-- `[ ]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
+- `[x]` **Tarea 83**: Diseñar un servicio de base para registrar las alertas de optimización en la base de datos.
 - `[ ]` **Tarea 84**: Crear el servicio de auditoría de logs para registrar cada acción crítica de la plataforma.
 - `[ ]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
 - `[ ]` **Tarea 86**: Implementar el sistema de aceptación de invitación y vinculación de cuentas de usuario.
