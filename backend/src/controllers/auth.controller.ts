@@ -4,6 +4,7 @@ import { AuthService } from '../services/auth.service';
 import { BadRequestError, UnauthorizedError, ConflictError } from '../errors/AppError';
 import { LoginDto, RegisterDto, UserPublicProfile } from '../types/auth.types';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
+import { ActivityLogService } from '../services/activity-log.service';
 
 // Regex de validación de email básico (RFC 5322 simplificado)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,7 +88,19 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     res.cookie('token', token, AuthService.getCookieOptions());
 
-    // ── 9. Responder con el perfil del usuario creado ─────────────────
+    // ── 9. Auditar el registro (fire-and-forget) ──────────────────────
+    void ActivityLogService.log({
+      organizationId: user.organizationId,
+      userId: user.id,
+      action: 'USER_REGISTER',
+      entityType: 'user',
+      entityId: user.id,
+      metadata: { email: user.email, role: user.role },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    // ── 10. Responder con el perfil del usuario creado ─────────────────
     const profile: UserPublicProfile = {
       id: user.id,
       email: user.email,
@@ -146,7 +159,18 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
     // 4. Establecer cookie de sesión HttpOnly
     res.cookie('token', token, AuthService.getCookieOptions());
 
-    // 5. Responder con el perfil público del usuario
+    // 5. Auditar el inicio de sesión (fire-and-forget)
+    void ActivityLogService.log({
+      organizationId: user.organizationId,
+      userId: user.id,
+      action: 'USER_LOGIN',
+      entityType: 'user',
+      entityId: user.id,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    // 6. Responder con el perfil público del usuario
     const profile: UserPublicProfile = {
       id: user.id,
       email: user.email,
@@ -169,7 +193,11 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
  * Cierra la sesión del usuario limpiando la cookie JWT.
  * Requiere autenticación previa (requireAuth middleware).
  */
-export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const logout = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     // Limpiar la cookie con las mismas opciones con las que fue creada
     const cookieOptions = AuthService.getCookieOptions();
@@ -178,6 +206,19 @@ export const logout = async (req: Request, res: Response, next: NextFunction): P
       secure: cookieOptions.secure,
       sameSite: cookieOptions.sameSite,
     });
+
+    // Auditar el cierre de sesión (fire-and-forget, solo si había sesión activa)
+    if (req.user) {
+      void ActivityLogService.log({
+        organizationId: req.user.organizationId,
+        userId: req.user.id,
+        action: 'USER_LOGOUT',
+        entityType: 'user',
+        entityId: req.user.id,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+    }
 
     res.status(200).json({
       status: 'success',

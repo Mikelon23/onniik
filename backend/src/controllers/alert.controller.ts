@@ -17,6 +17,7 @@ import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { AlertService, CreateAlertDto, ResolveAlertDto } from '../services/alert.service';
 import { BadRequestError } from '../errors/AppError';
 import { AlertType, AlertStatus, AlertPriority } from '@prisma/client';
+import { ActivityLogService } from '../services/activity-log.service';
 
 // ─────────────────────────────────────────────
 // Helper: parsear parámetros de paginación
@@ -239,6 +240,18 @@ export const createAlert = async (
       expiresAt,
     });
 
+    // Auditar la creación de la alerta (fire-and-forget)
+    void ActivityLogService.log({
+      organizationId: orgId,
+      userId: req.user!.id,
+      action: 'ALERT_CREATED',
+      entityType: 'alert',
+      entityId: alert.id,
+      metadata: { alertType, priority: alert.priority, estimatedSavings, title },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
     res.status(201).json({
       status: 'success',
       message: 'Alerta de optimización registrada exitosamente.',
@@ -298,9 +311,40 @@ export const resolveAlert = async (
       resolutionNote,
     });
 
+    // Auditar la resolución de la alerta (fire-and-forget)
+    // Mapeo de status a ActivityAction
+    const actionMap: Partial<Record<AlertStatus, 'ALERT_ACCEPTED' | 'ALERT_DISMISSED'>> = {
+      ACCEPTED: 'ALERT_ACCEPTED',
+      DISMISSED: 'ALERT_DISMISSED',
+    };
+    const auditAction = actionMap[result.transition.to as AlertStatus];
+    if (auditAction) {
+      void ActivityLogService.log({
+        organizationId: orgId,
+        userId: resolvedById,
+        action: auditAction,
+        entityType: 'alert',
+        entityId: id,
+        metadata: {
+          alertTitle: result.transition.alertTitle,
+          from: result.transition.from,
+          to: result.transition.to,
+          resolutionNote: result.transition.resolutionNote,
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+      });
+    }
+
     res.status(200).json({
       status: 'success',
-      message: `Alerta ${result.transition.to === 'ACCEPTED' ? 'aceptada' : result.transition.to === 'DISMISSED' ? 'descartada' : 'completada'} exitosamente.`,
+      message: `Alerta ${
+        result.transition.to === 'ACCEPTED'
+          ? 'aceptada'
+          : result.transition.to === 'DISMISSED'
+            ? 'descartada'
+            : 'completada'
+      } exitosamente.`,
       data: result,
     });
   } catch (error) {
