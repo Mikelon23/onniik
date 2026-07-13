@@ -22,6 +22,7 @@ import {
   updateMyOrg,
   getMyOrgMembers,
   inviteMember,
+  acceptOrgInvite,
 } from '../controllers/org.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
@@ -49,5 +50,11 @@ router.get('/me/members', requireAuth, requireAdminOrItManager, getMyOrgMembers)
 // IMPORTANTE: debe ir ANTES de rutas dinámicas /me/* para evitar conflictos.
 // Acceso: solo ADMIN.
 router.post('/invite', requireAuth, requireAdmin, inviteMember);
+
+// ── POST /api/v1/orgs/invite/accept ──────────────────────────────────────────
+// Acepta la invitación de un miembro, establece su contraseña definitiva
+// e inicia sesión de forma automática.
+// Acceso: Público (el token de invitación se pasa en el body).
+router.post('/invite/accept', acceptOrgInvite);
 
 export default router;

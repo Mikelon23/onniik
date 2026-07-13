@@ -18,6 +18,7 @@ import { NotFoundError, ConflictError, BadRequestError } from '../errors/AppErro
 import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
 import crypto from 'crypto';
+import { UserPublicProfile } from '../types/auth.types';
 
 // ─────────────────────────────────────────────
 // DTOs de entrada
@@ -56,6 +57,19 @@ export interface InviteResult {
    * El invitado deberá cambiarla al aceptar la invitación (T86).
    */
   temporaryPassword: string;
+}
+
+/** DTO para que el invitado acepte la invitación y establezca su contraseña definitiva */
+export interface AcceptInviteDto {
+  /**
+   * Token JWT de invitación (recibido por el admin al ejecutar POST /api/v1/orgs/invite).
+   * Firmado con el mismo secreto que los tokens de sesión. Expira en 72h.
+   */
+  inviteToken: string;
+  /** Nueva contraseña definitiva del usuario (mín. 8 chars, al menos 1 letra y 1 dígito) */
+  newPassword: string;
+  /** Nombre completo del usuario (opcional — puede actualizarlo al aceptar) */
+  name?: string;
 }
 
 // ─────────────────────────────────────────────
@@ -324,6 +338,7 @@ export const OrgService = {
         email: newUser.email,
         role: newUser.role,
         organizationId: orgId,
+        scope: 'invite',
       },
       { expiresIn: '72h' }
     );
@@ -340,6 +355,105 @@ export const OrgService = {
       member,
       inviteToken,
       temporaryPassword,
+    };
+  },
+
+  /**
+   * Acepta una invitación de miembro y establece su contraseña definitiva.
+   *
+   * Flujo (Tarea 86):
+   *   1. Verifica el inviteToken (debe ser un JWT firmado y no expirado).
+   *   2. Valida que el token tenga el scope 'invite'.
+   *   3. Obtiene el usuario asociado y valida que coincida su email y organización.
+   *   4. Valida los criterios de seguridad de la nueva contraseña.
+   *   5. Hashea la nueva contraseña y actualiza el usuario en la BD (y su nombre si se provee).
+   *   6. Retorna el perfil público del usuario actualizado.
+   *
+   * @param dto - Datos para aceptar la invitación (inviteToken, newPassword, name)
+   * @returns Perfil público del usuario actualizado
+   * @throws {BadRequestError} Si los datos son inválidos o la contraseña no es segura
+   * @throws {NotFoundError} Si el usuario o la organización no existen
+   */
+  async acceptInvite(dto: AcceptInviteDto): Promise<UserPublicProfile> {
+    const { inviteToken, newPassword, name } = dto;
+
+    // 1. Validar campos requeridos
+    if (!inviteToken) {
+      throw new BadRequestError('El token de invitación es requerido.');
+    }
+    if (!newPassword) {
+      throw new BadRequestError('La nueva contraseña es requerida.');
+    }
+
+    // 2. Validar fortaleza de la contraseña
+    if (newPassword.length < 8 || !/[a-zA-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      throw new BadRequestError(
+        'La contraseña debe tener al menos 8 caracteres, incluir una letra y un número.'
+      );
+    }
+
+    // 3. Verificar el token JWT de invitación
+    // verifyToken lanzará UnauthorizedError si el token es inválido o expiró
+    const payload = AuthService.verifyToken(inviteToken);
+
+    // 4. Validar que el scope sea restrictivo de invitación
+    if (payload.scope !== 'invite') {
+      throw new BadRequestError('El token provisto no es válido para aceptar invitaciones.');
+    }
+
+    // 5. Buscar al usuario e incluir su organización
+    const user = await prisma.user.findUnique({
+      where: { id: payload.id },
+      include: {
+        organization: {
+          select: { name: true },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError('El usuario asociado a la invitación no existe.');
+    }
+
+    // Validaciones de coincidencia para mitigar manipulación externa
+    if (user.email.toLowerCase().trim() !== payload.email.toLowerCase().trim()) {
+      throw new BadRequestError('El token de invitación no corresponde a este usuario.');
+    }
+    if (user.organizationId !== payload.organizationId) {
+      throw new BadRequestError(
+        'El token de invitación no corresponde a la organización indicada.'
+      );
+    }
+
+    // 6. Hashear la nueva contraseña definitiva
+    const passwordHash = await AuthService.hashPassword(newPassword);
+
+    // 7. Preparar datos de actualización
+    const updateData: { passwordHash: string; name?: string | null } = { passwordHash };
+    if (name !== undefined) {
+      updateData.name = name.trim() || null;
+    }
+
+    // 8. Actualizar el usuario en la base de datos
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: updateData,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        organizationId: true,
+      },
+    });
+
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      name: updatedUser.name,
+      role: updatedUser.role,
+      organizationId: updatedUser.organizationId,
+      organizationName: user.organization.name,
     };
   },
 };

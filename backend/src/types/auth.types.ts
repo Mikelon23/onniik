@@ -29,6 +29,8 @@ export interface JwtPayload {
   role: Role;
   /** UUID de la organización a la que pertenece el usuario */
   organizationId: string;
+  /** Restricción opcional del ámbito del token (ej. 'invite') */
+  scope?: string;
 }
 
 // ─────────────────────────────────────────────
