@@ -14,12 +14,18 @@
  * El control de roles se aplica en la capa de rutas (org.routes.ts).
  */
 
-import { Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
-import { OrgService, UpdateOrgDto, InviteMemberDto } from '../services/org.service';
+import {
+  OrgService,
+  UpdateOrgDto,
+  InviteMemberDto,
+  AcceptInviteDto,
+} from '../services/org.service';
 import { BadRequestError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { ActivityLogService } from '../services/activity-log.service';
+import { AuthService } from '../services/auth.service';
 
 // ─────────────────────────────────────────────
 // GET /api/v1/orgs/me
@@ -288,6 +294,80 @@ export const inviteMember = async (
         nextStep:
           'El invitado debe usar POST /api/v1/orgs/invite/accept con el inviteToken para establecer su contraseña definitiva (Tarea 86).',
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─────────────────────────────────────────────
+// POST /api/v1/orgs/invite/accept
+// ─────────────────────────────────────────────
+
+/**
+ * Acepta una invitación de miembro, establece su contraseña definitiva y
+ * realiza inicio de sesión automático (auto-login) estableciendo la cookie JWT.
+ *
+ * - Endpoint público (no requiere requireAuth)
+ * - Valida la firma, expiración y restricción de ámbito del token de invitación
+ * - Actualiza la contraseña en la base de datos
+ * - Audita la acción como PASSWORD_CHANGED con metadata { inviteAccepted: true }
+ *
+ * Body requerido: { inviteToken: string, newPassword: string }
+ * Body opcional:  { name: string }
+ *
+ * @example
+ * POST /api/v1/orgs/invite/accept
+ * { "inviteToken": "eyJ...", "newPassword": "NuevaPassword123!" }
+ *
+ * // Response 200
+ * {
+ *   "status": "success",
+ *   "message": "Invitación aceptada y contraseña establecida con éxito. Sesión iniciada.",
+ *   "data": {
+ *     "user": { "id": "...", "email": "...", "role": "READER", "organizationId": "..." }
+ *   }
+ * }
+ */
+export const acceptOrgInvite = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { inviteToken, newPassword, name } = req.body as AcceptInviteDto;
+
+    // ── 1. Ejecutar lógica de aceptación en el servicio ──────────
+    const userProfile = await OrgService.acceptInvite({ inviteToken, newPassword, name });
+
+    // ── 2. Auto-login: Generar token de sesión estándar (sin scope invite) ──
+    const sessionToken = AuthService.generateToken({
+      id: userProfile.id,
+      email: userProfile.email,
+      role: userProfile.role as Role,
+      organizationId: userProfile.organizationId,
+    });
+
+    // ── 3. Establecer cookie HttpOnly de sesión ───────────────────
+    res.cookie('token', sessionToken, AuthService.getCookieOptions());
+
+    // ── 4. Auditar la acción (fire-and-forget) ────────────────────
+    void ActivityLogService.log({
+      organizationId: userProfile.organizationId,
+      userId: userProfile.id,
+      action: 'PASSWORD_CHANGED',
+      entityType: 'user',
+      entityId: userProfile.id,
+      metadata: { inviteAccepted: true },
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+
+    // ── 5. Responder al cliente ───────────────────────────────────
+    res.status(200).json({
+      status: 'success',
+      message: 'Invitación aceptada y contraseña establecida con éxito. Sesión iniciada.',
+      data: { user: userProfile },
     });
   } catch (error) {
     next(error);
