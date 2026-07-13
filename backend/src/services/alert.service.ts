@@ -189,30 +189,15 @@ export const AlertService = {
     if (filter.priority) where.priority = filter.priority;
     if (filter.subscriptionId) where.subscriptionId = filter.subscriptionId;
 
-    // Orden: CRITICAL → HIGH → MEDIUM → LOW, y dentro del mismo priority, más reciente primero
-    const priorityOrder: AlertPriority[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+    // Orden nativo en BD: CRITICAL → HIGH → MEDIUM → LOW, y más reciente primero (Tarea 88)
 
-    const [alerts, total] = await prisma.$transaction([
-      prisma.optimizationAlert.findMany({
-        where,
-        select: ALERT_PUBLIC_SELECT,
-        orderBy: [
-          // Prisma no soporta orden por enum nativo; ordenamos por createdAt desc como proxy
-          // El orden real por prioridad se aplica en el frontend o en una query raw futura (T88)
-          { createdAt: 'desc' },
-        ],
-        skip,
-        take: safeLimit,
-      }),
+    // Tarea 88: Ordenamiento nativo por prioridad optimizado en base de datos en paralelo
+    const [alerts, total] = await Promise.all([
+      prisma.optimizationAlert.findManySortedByPriority(orgId, filter, skip, safeLimit),
       prisma.optimizationAlert.count({ where }),
     ]);
 
-    // Ordenar en memoria por prioridad (estrategia temporal hasta T88 con optimizador de queries)
-    const sortedAlerts = alerts.sort((a, b) => {
-      return priorityOrder.indexOf(a.priority) - priorityOrder.indexOf(b.priority);
-    });
-
-    return { alerts: sortedAlerts, total, page, limit: safeLimit };
+    return { alerts, total, page, limit: safeLimit };
   },
 
   /**

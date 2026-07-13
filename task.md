@@ -94,7 +94,7 @@
 - `[x]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
 - `[x]` **Tarea 86**: Implementar el sistema de aceptación de invitación y vinculación de cuentas de usuario.
 - `[x]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
-- `[ ]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.
+- `[x]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.
 - `[ ]` **Tarea 89**: Crear una capa de validación de datos de entrada usando Zod o Joi en todas las rutas críticas.
 - `[ ]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
 - `[ ]` **Tarea 91**: Crear un sistema básico de envío de correos electrónicos de bienvenida y notificaciones del sistema.
