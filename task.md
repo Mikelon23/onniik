@@ -93,7 +93,7 @@
 - `[x]` **Tarea 84**: Crear el servicio de auditoría de logs para registrar cada acción crítica de la plataforma.
 - `[x]` **Tarea 85**: Crear la ruta para la invitación de nuevos miembros a la organización (`/api/v1/orgs/invite`).
 - `[x]` **Tarea 86**: Implementar el sistema de aceptación de invitación y vinculación de cuentas de usuario.
-- `[ ]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
+- `[x]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
 - `[ ]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.
 - `[ ]` **Tarea 89**: Crear una capa de validación de datos de entrada usando Zod o Joi en todas las rutas críticas.
 - `[ ]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
