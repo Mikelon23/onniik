@@ -21,24 +21,8 @@ export const DashboardService = {
    * @param orgId - UUID de la organización
    */
   async getDashboardData(orgId: string) {
-    // 1. Obtener todas las suscripciones de la organización
-    const subscriptions = await prisma.saaSSubscription.findMany({
-      where: { organizationId: orgId },
-      include: {
-        saasProduct: {
-          select: {
-            name: true,
-            logoUrl: true,
-            category: true,
-          },
-        },
-      },
-    });
-
-    // 2. Obtener todas las alertas de optimización de la organización
-    const alerts = await prisma.optimizationAlert.findMany({
-      where: { organizationId: orgId },
-    });
+    // Obtener métricas consolidadas del Dashboard optimizadas en paralelo desde la extensión Prisma (Tarea 88)
+    const { subscriptions, alerts } = await prisma.getDashboardMetrics(orgId);
 
     // ── PROCESAMIENTO DE SUSCRIPCIONES ──
 
