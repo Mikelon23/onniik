@@ -15,7 +15,6 @@
 import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { AlertService, CreateAlertDto, ResolveAlertDto } from '../services/alert.service';
-import { BadRequestError } from '../errors/AppError';
 import { AlertType, AlertStatus, AlertPriority } from '@prisma/client';
 import { ActivityLogService } from '../services/activity-log.service';
 
@@ -198,32 +197,6 @@ export const createAlert = async (
       expiresAt,
     } = req.body as CreateAlertDto;
 
-    // Validaciones de campos requeridos
-    if (!alertType || !title || !description || !recommendation) {
-      throw new BadRequestError(
-        'Los campos alertType, title, description y recommendation son requeridos.'
-      );
-    }
-
-    // Validar enum alertType
-    if (!Object.values(AlertType).includes(alertType as AlertType)) {
-      throw new BadRequestError(
-        `Tipo de alerta inválido. Valores permitidos: ${Object.values(AlertType).join(', ')}`
-      );
-    }
-
-    // Validar enum priority si se proporciona
-    if (priority && !Object.values(AlertPriority).includes(priority as AlertPriority)) {
-      throw new BadRequestError(
-        `Prioridad inválida. Valores permitidos: ${Object.values(AlertPriority).join(', ')}`
-      );
-    }
-
-    // Validar formato de expiresAt si se proporciona
-    if (expiresAt && isNaN(Date.parse(expiresAt))) {
-      throw new BadRequestError('El campo expiresAt debe ser una fecha ISO 8601 válida.');
-    }
-
     const alert = await AlertService.createAlert(orgId, {
       subscriptionId,
       triggeredByUserId,
@@ -293,18 +266,6 @@ export const resolveAlert = async (
     const resolvedById = req.user!.id;
     const { id } = req.params as Record<string, string>;
     const { status, resolutionNote } = req.body as ResolveAlertDto;
-
-    if (!status) {
-      throw new BadRequestError('El campo status es requerido para resolver la alerta.');
-    }
-
-    // Validar que el nuevo estado es uno de los estados de resolución válidos
-    const resolvableStatuses: AlertStatus[] = ['ACCEPTED', 'DISMISSED', 'COMPLETED'];
-    if (!resolvableStatuses.includes(status as AlertStatus)) {
-      throw new BadRequestError(
-        `Estado de resolución inválido. Estados permitidos: ${resolvableStatuses.join(', ')}`
-      );
-    }
 
     const result = await AlertService.resolveAlert(id, orgId, resolvedById, {
       status,

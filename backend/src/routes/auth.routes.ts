@@ -1,15 +1,17 @@
 import { Router } from 'express';
 import { register, login, logout, getMe } from '../controllers/auth.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
+import { registerSchema, loginSchema } from '../schemas/auth.schema';
 
 const router = Router();
 
 // ── Rutas públicas ────────────────────────────────────────────────────
 // POST /api/v1/auth/register — Registro de nuevo usuario
-router.post('/register', register);
+router.post('/register', validateBody(registerSchema), register);
 
 // POST /api/v1/auth/login — Inicio de sesión
-router.post('/login', login);
+router.post('/login', validateBody(loginSchema), login);
 
 // ── Rutas protegidas (requieren JWT válido en cookie) ─────────────────
 // POST /api/v1/auth/logout — Cierre de sesión

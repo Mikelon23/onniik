@@ -50,6 +50,14 @@ import {
 } from '../controllers/saas.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
+import {
+  createProductSchema,
+  updateProductSchema,
+  createSubscriptionSchema,
+  updateSubscriptionSchema,
+  updateSubscriptionStatusSchema,
+} from '../schemas/saas.schema';
 
 const router = Router();
 
@@ -64,10 +72,22 @@ router.get('/products', requireAuth, listProducts);
 router.get('/products/:id', requireAuth, getProduct);
 
 // POST /api/v1/saas/products — Crear producto en el catálogo (ADMIN + IT_MANAGER)
-router.post('/products', requireAuth, requireAdminOrItManager, createProduct);
+router.post(
+  '/products',
+  requireAuth,
+  requireAdminOrItManager,
+  validateBody(createProductSchema),
+  createProduct
+);
 
 // PATCH /api/v1/saas/products/:id — Actualizar producto del catálogo (solo ADMIN)
-router.patch('/products/:id', requireAuth, requireAdmin, updateProduct);
+router.patch(
+  '/products/:id',
+  requireAuth,
+  requireAdmin,
+  validateBody(updateProductSchema),
+  updateProduct
+);
 
 // DELETE /api/v1/saas/products/:id — Eliminar producto del catálogo (solo ADMIN)
 router.delete('/products/:id', requireAuth, requireAdmin, deleteProduct);
@@ -87,7 +107,13 @@ router.get('/subscriptions', requireAuth, listSubscriptions);
 router.get('/subscriptions/:id', requireAuth, getSubscription);
 
 // POST /api/v1/saas/subscriptions — Crear suscripción para la org (ADMIN + IT_MANAGER)
-router.post('/subscriptions', requireAuth, requireAdminOrItManager, createSubscription);
+router.post(
+  '/subscriptions',
+  requireAuth,
+  requireAdminOrItManager,
+  validateBody(createSubscriptionSchema),
+  createSubscription
+);
 
 // PATCH /api/v1/saas/subscriptions/:id/status — Cambiar estado con máquina de estados (Tarea 82)
 // IMPORTANTE: debe estar ANTES de PATCH /subscriptions/:id para que Express no lo capture antes
@@ -95,11 +121,18 @@ router.patch(
   '/subscriptions/:id/status',
   requireAuth,
   requireAdminOrItManager,
+  validateBody(updateSubscriptionStatusSchema),
   updateSubscriptionStatus
 );
 
 // PATCH /api/v1/saas/subscriptions/:id — Actualizar suscripción (ADMIN + IT_MANAGER)
-router.patch('/subscriptions/:id', requireAuth, requireAdminOrItManager, updateSubscription);
+router.patch(
+  '/subscriptions/:id',
+  requireAuth,
+  requireAdminOrItManager,
+  validateBody(updateSubscriptionSchema),
+  updateSubscription
+);
 
 // DELETE /api/v1/saas/subscriptions/:id — Eliminar suscripción de la org (solo ADMIN)
 router.delete('/subscriptions/:id', requireAuth, requireAdmin, deleteSubscription);

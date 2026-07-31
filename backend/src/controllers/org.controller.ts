@@ -22,7 +22,6 @@ import {
   InviteMemberDto,
   AcceptInviteDto,
 } from '../services/org.service';
-import { BadRequestError } from '../errors/AppError';
 import { Role } from '@prisma/client';
 import { ActivityLogService } from '../services/activity-log.service';
 import { AuthService } from '../services/auth.service';
@@ -112,16 +111,6 @@ export const updateMyOrg = async (
   try {
     const organizationId = req.user!.organizationId;
     const { name } = req.body as UpdateOrgDto;
-
-    // ── Validación: al menos un campo debe estar presente ─────────────
-    if (name === undefined) {
-      throw new BadRequestError('Se debe proporcionar al menos un campo para actualizar: name.');
-    }
-
-    // ── Validación: el nombre no puede ser vacío ────────────────────────
-    if (typeof name === 'string' && name.trim().length === 0) {
-      throw new BadRequestError('El nombre de la organización no puede estar vacío.');
-    }
 
     const organization = await OrgService.updateOrg(organizationId, { name });
 
@@ -242,24 +231,6 @@ export const inviteMember = async (
     const orgId = req.user!.organizationId;
     const inviterId = req.user!.id;
     const { email, name, role } = req.body as InviteMemberDto;
-
-    // ── 1. Validar campo requerido ──────────────────────────────────────────────
-    if (!email) {
-      throw new BadRequestError('El campo email es requerido para invitar a un nuevo miembro.');
-    }
-
-    // ── 2. Validar formato básico de email ──────────────────────────────
-    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!EMAIL_REGEX.test(email)) {
-      throw new BadRequestError('El formato del email proporcionado no es válido.');
-    }
-
-    // ── 3. Validar rol si se proporciona ────────────────────────────────
-    if (role && !Object.values(Role).includes(role as Role)) {
-      throw new BadRequestError(
-        `Rol inválido. Valores permitidos: ${Object.values(Role).join(', ')}`
-      );
-    }
 
     // ── 4. Invitar al miembro ──────────────────────────────────────────────
     const result = await OrgService.inviteMember(orgId, inviterId, { email, name, role });

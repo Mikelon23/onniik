@@ -21,8 +21,7 @@ import {
   SaaSSubscriptionService,
   UpdateStatusDto,
 } from '../services/saas.service';
-import { BadRequestError } from '../errors/AppError';
-import { SaaSCategory, BillingCycle, SubscriptionStatus, DetectionSource } from '@prisma/client';
+import { SaaSCategory, SubscriptionStatus, DetectionSource } from '@prisma/client';
 
 // ─────────────────────────────────────────────
 // Helper: parsear parámetros de paginación
@@ -107,16 +106,6 @@ export const createProduct = async (
   try {
     const { name, slug, category, description, website, logoUrl, vendor } = req.body;
 
-    if (!name || !slug) {
-      throw new BadRequestError('Los campos name y slug son requeridos para crear un producto.');
-    }
-
-    if (category && !Object.values(SaaSCategory).includes(category as SaaSCategory)) {
-      throw new BadRequestError(
-        `Categoría inválida. Valores permitidos: ${Object.values(SaaSCategory).join(', ')}`
-      );
-    }
-
     const product = await SaaSProductService.createProduct({
       name,
       slug,
@@ -152,16 +141,6 @@ export const updateProduct = async (
   try {
     const { id } = req.params as Record<string, string>;
     const { name, slug, category, description, website, logoUrl, vendor } = req.body;
-
-    if (Object.keys(req.body).length === 0) {
-      throw new BadRequestError('Se debe proporcionar al menos un campo para actualizar.');
-    }
-
-    if (category && !Object.values(SaaSCategory).includes(category as SaaSCategory)) {
-      throw new BadRequestError(
-        `Categoría inválida. Valores permitidos: ${Object.values(SaaSCategory).join(', ')}`
-      );
-    }
 
     const product = await SaaSProductService.updateProduct(id, {
       name,
@@ -322,31 +301,20 @@ export const createSubscription = async (
       notes,
     } = req.body;
 
-    if (!saasProductId) {
-      throw new BadRequestError('El campo saasProductId es requerido.');
-    }
-
-    if (status && !Object.values(SubscriptionStatus).includes(status as SubscriptionStatus)) {
-      throw new BadRequestError(
-        `Estado inválido. Valores permitidos: ${Object.values(SubscriptionStatus).join(', ')}`
-      );
-    }
-
-    if (billingCycle && !Object.values(BillingCycle).includes(billingCycle as BillingCycle)) {
-      throw new BadRequestError(
-        `Ciclo de facturación inválido. Valores permitidos: ${Object.values(BillingCycle).join(', ')}`
-      );
-    }
-
     const subscription = await SaaSSubscriptionService.createSubscription(orgId, {
       saasProductId,
       status,
       detectionSource,
       ownerId,
-      seatCount: seatCount !== undefined ? Number(seatCount) : undefined,
-      activeSeats: activeSeats !== undefined ? Number(activeSeats) : undefined,
-      costPerSeat: costPerSeat !== undefined ? Number(costPerSeat) : undefined,
-      totalMonthlyCost: totalMonthlyCost !== undefined ? Number(totalMonthlyCost) : undefined,
+      seatCount: seatCount !== undefined && seatCount !== null ? Number(seatCount) : undefined,
+      activeSeats:
+        activeSeats !== undefined && activeSeats !== null ? Number(activeSeats) : undefined,
+      costPerSeat:
+        costPerSeat !== undefined && costPerSeat !== null ? Number(costPerSeat) : undefined,
+      totalMonthlyCost:
+        totalMonthlyCost !== undefined && totalMonthlyCost !== null
+          ? Number(totalMonthlyCost)
+          : undefined,
       currency,
       billingCycle,
       renewalDate,
@@ -381,10 +349,6 @@ export const updateSubscription = async (
   try {
     const orgId = req.user!.organizationId;
     const { id } = req.params as Record<string, string>;
-
-    if (Object.keys(req.body).length === 0) {
-      throw new BadRequestError('Se debe proporcionar al menos un campo para actualizar.');
-    }
 
     const subscription = await SaaSSubscriptionService.updateSubscription(id, orgId, req.body);
 
@@ -454,16 +418,6 @@ export const updateSubscriptionStatus = async (
     const orgId = req.user!.organizationId;
     const { id } = req.params as Record<string, string>;
     const { status, reason } = req.body as UpdateStatusDto;
-
-    if (!status) {
-      throw new BadRequestError('El campo status es requerido.');
-    }
-
-    if (!Object.values(SubscriptionStatus).includes(status as SubscriptionStatus)) {
-      throw new BadRequestError(
-        `Estado inválido. Valores permitidos: ${Object.values(SubscriptionStatus).join(', ')}`
-      );
-    }
 
     const result = await SaaSSubscriptionService.updateSubscriptionStatus(id, orgId, {
       status,
