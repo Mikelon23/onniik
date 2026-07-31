@@ -26,6 +26,8 @@ import {
 } from '../controllers/org.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
+import { updateOrgSchema, inviteMemberSchema, acceptInviteSchema } from '../schemas/org.schema';
 
 const router = Router();
 
@@ -37,7 +39,7 @@ router.get('/me', requireAuth, getMyOrg);
 // ── PATCH /api/v1/orgs/me ───────────────────────────────────────────────────
 // Actualiza los metadatos de la organización (solo nombre por ahora).
 // Restringido al rol ADMIN: es una operación administrativa crítica.
-router.patch('/me', requireAuth, requireAdmin, updateMyOrg);
+router.patch('/me', requireAuth, requireAdmin, validateBody(updateOrgSchema), updateMyOrg);
 
 // ── GET /api/v1/orgs/me/members ─────────────────────────────────────────────
 // Lista todos los miembros (usuarios) de la organización con sus roles.
@@ -49,12 +51,12 @@ router.get('/me/members', requireAuth, requireAdminOrItManager, getMyOrgMembers)
 // contraseña temporal y un token de invitación (72h) para T86.
 // IMPORTANTE: debe ir ANTES de rutas dinámicas /me/* para evitar conflictos.
 // Acceso: solo ADMIN.
-router.post('/invite', requireAuth, requireAdmin, inviteMember);
+router.post('/invite', requireAuth, requireAdmin, validateBody(inviteMemberSchema), inviteMember);
 
 // ── POST /api/v1/orgs/invite/accept ──────────────────────────────────────────
 // Acepta la invitación de un miembro, establece su contraseña definitiva
 // e inicia sesión de forma automática.
 // Acceso: Público (el token de invitación se pasa en el body).
-router.post('/invite/accept', acceptOrgInvite);
+router.post('/invite/accept', validateBody(acceptInviteSchema), acceptOrgInvite);
 
 export default router;

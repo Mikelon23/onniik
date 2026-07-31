@@ -29,6 +29,8 @@ import {
 } from '../controllers/alert.controller';
 import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
+import { validateBody } from '../middlewares/validation.middleware';
+import { createAlertSchema, resolveAlertSchema } from '../schemas/alert.schema';
 
 const router = Router();
 
@@ -44,11 +46,23 @@ router.get('/', requireAuth, listAlerts);
 router.get('/:id', requireAuth, getAlert);
 
 // ── POST /api/v1/alerts — Crear una nueva alerta (sistema IA o manual) ───────
-router.post('/', requireAuth, requireAdminOrItManager, createAlert);
+router.post(
+  '/',
+  requireAuth,
+  requireAdminOrItManager,
+  validateBody(createAlertSchema),
+  createAlert
+);
 
 // ── PATCH /api/v1/alerts/:id/resolve — Aceptar/descartar/completar alerta ───
 // Human-in-the-loop: solo ADMIN o IT_MANAGER pueden resolver alertas
-router.patch('/:id/resolve', requireAuth, requireAdminOrItManager, resolveAlert);
+router.patch(
+  '/:id/resolve',
+  requireAuth,
+  requireAdminOrItManager,
+  validateBody(resolveAlertSchema),
+  resolveAlert
+);
 
 // ── DELETE /api/v1/alerts/:id — Eliminar alerta físicamente (solo ADMIN) ─────
 // Se recomienda usar PATCH /resolve con status=DISMISSED en lugar de DELETE

@@ -6,43 +6,9 @@ import { LoginDto, RegisterDto, UserPublicProfile } from '../types/auth.types';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { ActivityLogService } from '../services/activity-log.service';
 
-// Regex de validación de email básico (RFC 5322 simplificado)
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/**
- * POST /api/v1/auth/register
- * Registra un nuevo usuario en una organización existente.
- *
- * Validaciones aplicadas:
- *   - Campos requeridos: email, password, organizationId
- *   - Formato de email válido
- *   - Contraseña: mínimo 8 caracteres, al menos 1 letra y 1 dígito
- *   - La organización debe existir
- *   - El email no debe estar ya registrado
- *
- * En caso de éxito, auto-inicia sesión estableciendo la cookie JWT HttpOnly.
- */
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password, name, organizationId } = req.body as RegisterDto;
-
-    // ── 1. Validación de campos requeridos ────────────────────────────
-    if (!email || !password || !organizationId) {
-      throw new BadRequestError('Email, contraseña y organizationId son campos requeridos.');
-    }
-
-    // ── 2. Validación de formato de email ─────────────────────────────
-    if (!EMAIL_REGEX.test(email)) {
-      throw new BadRequestError('El formato del email proporcionado no es válido.');
-    }
-
-    // ── 3. Validación de fortaleza de contraseña ──────────────────────
-    // Mínimo 8 chars, al menos 1 letra y 1 dígito
-    if (password.length < 8 || !/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
-      throw new BadRequestError(
-        'La contraseña debe tener al menos 8 caracteres, incluir una letra y un número.'
-      );
-    }
 
     // ── 4. Verificar que la organización existe ───────────────────────
     const organization = await prisma.organization.findUnique({
@@ -127,10 +93,6 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { email, password } = req.body as LoginDto;
-
-    if (!email || !password) {
-      throw new BadRequestError('El email y la contraseña son requeridos.');
-    }
 
     // 1. Buscar al usuario por correo electrónico
     const user = await prisma.user.findUnique({
