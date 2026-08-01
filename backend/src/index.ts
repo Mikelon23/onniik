@@ -10,11 +10,15 @@ import { NotFoundError } from './errors/AppError';
 import { corsOptions } from './config/cors';
 import apiRouter from './routes';
 import logger from './config/logger';
+import { apiLimiter } from './middlewares/rate-limit.middleware';
 
 dotenv.config();
 
 const app = express();
 const PORT: number | string = process.env.PORT || 5000;
+
+// Trust proxy to retrieve the real client IP address behind reverse proxies
+app.set('trust proxy', 1);
 
 // Database connection pool shared from config/db
 
@@ -34,7 +38,7 @@ app.use(
 );
 
 // Register Modular API Routes
-app.use('/api', apiRouter);
+app.use('/api', apiLimiter, apiRouter);
 
 // Fallback for non-existent routes (404)
 app.use((req: Request, res: Response, next: NextFunction) => {

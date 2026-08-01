@@ -28,6 +28,7 @@ import { requireAuth } from '../middlewares/auth.middleware';
 import { requireAdmin, requireAdminOrItManager } from '../middlewares/rbac.middleware';
 import { validateBody } from '../middlewares/validation.middleware';
 import { updateOrgSchema, inviteMemberSchema, acceptInviteSchema } from '../schemas/org.schema';
+import { authLimiter } from '../middlewares/rate-limit.middleware';
 
 const router = Router();
 
@@ -51,12 +52,19 @@ router.get('/me/members', requireAuth, requireAdminOrItManager, getMyOrgMembers)
 // contraseña temporal y un token de invitación (72h) para T86.
 // IMPORTANTE: debe ir ANTES de rutas dinámicas /me/* para evitar conflictos.
 // Acceso: solo ADMIN.
-router.post('/invite', requireAuth, requireAdmin, validateBody(inviteMemberSchema), inviteMember);
+router.post(
+  '/invite',
+  requireAuth,
+  requireAdmin,
+  authLimiter,
+  validateBody(inviteMemberSchema),
+  inviteMember
+);
 
 // ── POST /api/v1/orgs/invite/accept ──────────────────────────────────────────
 // Acepta la invitación de un miembro, establece su contraseña definitiva
 // e inicia sesión de forma automática.
 // Acceso: Público (el token de invitación se pasa en el body).
-router.post('/invite/accept', validateBody(acceptInviteSchema), acceptOrgInvite);
+router.post('/invite/accept', authLimiter, validateBody(acceptInviteSchema), acceptOrgInvite);
 
 export default router;

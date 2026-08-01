@@ -96,7 +96,7 @@
 - `[x]` **Tarea 87**: Crear la lógica de obtención de datos consolidados para el Dashboard (KPIs rápidos de ahorro).
 - `[x]` **Tarea 88**: Implementar un optimizador de consultas en Prisma para acelerar la carga de datos del dashboard.
 - `[x]` **Tarea 89**: Crear una capa de validación de datos de entrada usando Zod o Joi en todas las rutas críticas.
-- `[ ]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
+- `[x]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
 - `[ ]` **Tarea 91**: Crear un sistema básico de envío de correos electrónicos de bienvenida y notificaciones del sistema.
 - `[ ]` **Tarea 92**: Integrar nodemailer u otro servicio de envío de correos y configurar las plantillas HTML.
 - `[ ]` **Tarea 93**: Escribir pruebas unitarias iniciales para el servicio de autenticación JWT.
