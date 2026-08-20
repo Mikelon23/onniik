@@ -5,6 +5,8 @@ import { BadRequestError, UnauthorizedError, ConflictError } from '../errors/App
 import { LoginDto, RegisterDto, UserPublicProfile } from '../types/auth.types';
 import { AuthenticatedRequest } from '../middlewares/auth.middleware';
 import { ActivityLogService } from '../services/activity-log.service';
+import { EmailService } from '../services/email.service';
+import logger from '../config/logger';
 
 export const register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -64,6 +66,11 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       metadata: { email: user.email, role: user.role },
       ipAddress: req.ip,
       userAgent: req.get('user-agent'),
+    });
+
+    // ── Enviar correo de bienvenida (fire-and-forget) ─────────────────
+    void EmailService.sendWelcomeEmail(user.email, user.name || '').catch((err) => {
+      logger.error(`[EMAIL] Error al enviar correo de bienvenida a ${user.email}:`, err);
     });
 
     // ── 10. Responder con el perfil del usuario creado ─────────────────
