@@ -19,6 +19,8 @@ import { Role } from '@prisma/client';
 import { AuthService } from './auth.service';
 import crypto from 'crypto';
 import { UserPublicProfile } from '../types/auth.types';
+import { EmailService } from './email.service';
+import logger from '../config/logger';
 
 // ─────────────────────────────────────────────
 // DTOs de entrada
@@ -342,6 +344,25 @@ export const OrgService = {
       },
       { expiresIn: '72h' }
     );
+
+    // 8. Obtener nombre del administrador que invita para personalizar el correo
+    const inviter = await prisma.user.findUnique({
+      where: { id: inviterId },
+      select: { name: true, email: true },
+    });
+    const inviterName = inviter?.name || inviter?.email || 'Un administrador';
+
+    // 9. Enviar correo de invitación (fire-and-forget)
+    void EmailService.sendInvitationEmail({
+      to: newUser.email,
+      name: newUser.name || '',
+      inviterName,
+      orgName: org.name,
+      inviteToken,
+      temporaryPassword,
+    }).catch((err) => {
+      logger.error(`[EMAIL] Error al enviar el correo de invitación a ${newUser.email}:`, err);
+    });
 
     const member: OrgMemberProfile = {
       id: newUser.id,
