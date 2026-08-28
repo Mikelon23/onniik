@@ -99,7 +99,7 @@
 - `[x]` **Tarea 90**: Implementar el rate limiting en el backend para evitar abusos de la API.
 - `[x]` **Tarea 91**: Crear un sistema básico de envío de correos electrónicos de bienvenida y notificaciones del sistema.
 - `[x]` **Tarea 92**: Integrar nodemailer u otro servicio de envío de correos y configurar las plantillas HTML.
-- `[ ]` **Tarea 93**: Escribir pruebas unitarias iniciales para el servicio de autenticación JWT.
+- `[x]` **Tarea 93**: Escribir pruebas unitarias iniciales para el servicio de autenticación JWT.
 - `[ ]` **Tarea 94**: Escribir pruebas unitarias para los controladores de suscripciones SaaS.
 - `[ ]` **Tarea 95**: Escribir pruebas unitarias para el middleware de control de roles (RBAC).
 - `[ ]` **Tarea 96**: Configurar Redis en el backend y crear la cola de tareas asíncronas usando BullMQ.
