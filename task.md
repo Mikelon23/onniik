@@ -102,7 +102,7 @@
 - `[x]` **Tarea 93**: Escribir pruebas unitarias iniciales para el servicio de autenticación JWT.
 - `[x]` **Tarea 94**: Escribir pruebas unitarias para los controladores de suscripciones SaaS.
 - `[x]` **Tarea 95**: Escribir pruebas unitarias para el middleware de control de roles (RBAC).
-- `[ ]` **Tarea 96**: Configurar Redis en el backend y crear la cola de tareas asíncronas usando BullMQ.
+- `[x]` **Tarea 96**: Configurar Redis en el backend y crear la cola de tareas asíncronas usando BullMQ.
 - `[ ]` **Tarea 97**: Diseñar un trabajador (worker) asíncrono básico para procesar tareas de sincronización de datos de fondo.
 - `[ ]` **Tarea 98**: Crear el endpoint de desconexión (`/api/v1/auth/logout`) e invalidación de tokens en Redis.
 - `[ ]` **Tarea 99**: Realizar la documentación preliminar de la API usando Swagger o un archivo OpenAPI.
