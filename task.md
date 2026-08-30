@@ -109,7 +109,7 @@
 - `[x]` **Tarea 100**: Ejecutar pruebas de carga iniciales sobre los endpoints de base de datos para asegurar su estabilidad.
 
 ## Integraciones y Conectores de Datos
-- `[ ]` **Tarea 101**: Registrar la aplicación de Onniik en Google Cloud Console para habilitar OAuth de Google.
+- `[x]` **Tarea 101**: Registrar la aplicación de Onniik en Google Cloud Console para habilitar OAuth de Google.
 - `[ ]` **Tarea 102**: Implementar el flujo OAuth2 de Google Workspace en el backend de Onniik.
 - `[ ]` **Tarea 103**: Crear el endpoint para recibir el código de autorización de Google y guardar los tokens de acceso de forma segura.
 - `[ ]` **Tarea 104**: Implementar un servicio de rotación automática de tokens de refresco OAuth de Google.
