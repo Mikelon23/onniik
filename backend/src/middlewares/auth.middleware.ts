@@ -30,7 +30,11 @@ export interface AuthenticatedRequest extends Request {
  *
  * @throws {UnauthorizedError} Si no hay cookie, el token es inválido o expirado.
  */
-export const requireAuth = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+export const requireAuth = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const token = req.cookies?.token as string | undefined;
 
   if (!token) {
@@ -39,6 +43,12 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
   }
 
   try {
+    const isBlacklisted = await AuthService.isTokenBlacklisted(token);
+    if (isBlacklisted) {
+      next(new UnauthorizedError('Acceso no autorizado: La sesión ha sido cerrada previamente.'));
+      return;
+    }
+
     // AuthService.verifyToken lanza UnauthorizedError con mensajes específicos
     // según el tipo de fallo (expirado vs inválido)
     const payload = AuthService.verifyToken(token);

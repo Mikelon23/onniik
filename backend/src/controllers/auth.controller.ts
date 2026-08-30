@@ -168,6 +168,12 @@ export const logout = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const token = req.cookies?.token as string | undefined;
+
+    if (token) {
+      await AuthService.blacklistToken(token);
+    }
+
     // Limpiar la cookie con las mismas opciones con las que fue creada
     const cookieOptions = AuthService.getCookieOptions();
     res.clearCookie('token', {

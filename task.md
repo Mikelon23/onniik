@@ -104,7 +104,7 @@
 - `[x]` **Tarea 95**: Escribir pruebas unitarias para el middleware de control de roles (RBAC).
 - `[x]` **Tarea 96**: Configurar Redis en el backend y crear la cola de tareas asíncronas usando BullMQ.
 - `[x]` **Tarea 97**: Diseñar un trabajador (worker) asíncrono básico para procesar tareas de sincronización de datos de fondo.
-- `[ ]` **Tarea 98**: Crear el endpoint de desconexión (`/api/v1/auth/logout`) e invalidación de tokens en Redis.
+- `[x]` **Tarea 98**: Crear el endpoint de desconexión (`/api/v1/auth/logout`) e invalidación de tokens en Redis.
 - `[ ]` **Tarea 99**: Realizar la documentación preliminar de la API usando Swagger o un archivo OpenAPI.
 - `[ ]` **Tarea 100**: Ejecutar pruebas de carga iniciales sobre los endpoints de base de datos para asegurar su estabilidad.
 

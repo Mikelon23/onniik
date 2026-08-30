@@ -15,6 +15,8 @@ import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 import { JwtPayload, TokenOptions } from '../types/auth.types';
 import { UnauthorizedError, InternalServerError } from '../errors/AppError';
+import { redisClient } from '../config/redis';
+import logger from '../config/logger';
 
 // ─────────────────────────────────────────────
 // Constantes del módulo
@@ -155,5 +157,48 @@ export const AuthService = {
       sameSite: isProd ? 'strict' : 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 1 día en milisegundos
     };
+  },
+
+  /**
+   * Agrega un token JWT a la lista negra en Redis (invalidación de token al logout).
+   * La clave en Redis expirará automáticamente cuando venza el token original.
+   *
+   * @param token - Token JWT a invalidar
+   */
+  async blacklistToken(token: string): Promise<void> {
+    if (!token) return;
+
+    try {
+      const decoded = jwt.decode(token) as { exp?: number } | null;
+      let ttlSeconds = 86400; // 24 horas por defecto
+
+      if (decoded && decoded.exp) {
+        const remaining = decoded.exp - Math.floor(Date.now() / 1000);
+        ttlSeconds = remaining > 0 ? remaining : 1;
+      }
+
+      await redisClient.setex(`token:blacklist:${token}`, ttlSeconds, 'revoked');
+      logger.info(`[AuthService] Token JWT invalidado en Redis con TTL de ${ttlSeconds}s`);
+    } catch (error) {
+      logger.error('[AuthService] Error al agregar token a la lista negra de Redis:', error);
+    }
+  },
+
+  /**
+   * Verifica si un token JWT ha sido revocado e incluido en la lista negra de Redis.
+   *
+   * @param token - Token JWT a consultar
+   * @returns `true` si el token está invalidado en Redis, `false` de lo contrario
+   */
+  async isTokenBlacklisted(token: string): Promise<boolean> {
+    if (!token) return false;
+
+    try {
+      const exists = await redisClient.exists(`token:blacklist:${token}`);
+      return exists === 1;
+    } catch (error) {
+      logger.warn('[AuthService] Fallo al consultar lista negra de tokens en Redis:', error);
+      return false;
+    }
   },
 };

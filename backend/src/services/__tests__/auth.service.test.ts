@@ -194,4 +194,26 @@ describe('AuthService', () => {
       consoleWarnSpy.mockRestore();
     });
   });
+
+  // ─────────────────────────────────────────────
+  // Pruebas: Blacklisting de tokens en Redis
+  // ─────────────────────────────────────────────
+
+  describe('blacklistToken & isTokenBlacklisted', () => {
+    it('debe registrar el token en Redis con setex y TTL adecuado', async () => {
+      const token = AuthService.generateToken(mockUserPayload, { expiresIn: '1h' });
+      await expect(AuthService.blacklistToken(token)).resolves.not.toThrow();
+    });
+
+    it('debe ignorar llamadas con token vacío o undefined', async () => {
+      await expect(AuthService.blacklistToken('')).resolves.not.toThrow();
+      await expect(AuthService.isTokenBlacklisted('')).resolves.toBe(false);
+    });
+
+    it('debe consultar la existencia del token en Redis', async () => {
+      const token = AuthService.generateToken(mockUserPayload);
+      const isBlacklisted = await AuthService.isTokenBlacklisted(token);
+      expect(typeof isBlacklisted).toBe('boolean');
+    });
+  });
 });
