@@ -11,6 +11,7 @@ import { corsOptions } from './config/cors';
 import apiRouter from './routes';
 import logger from './config/logger';
 import { apiLimiter } from './middlewares/rate-limit.middleware';
+import { setupSwagger } from './config/swagger';
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ const morganStream = {
 app.use(
   morgan(':method :url :status :res[content-length] - :response-time ms', { stream: morganStream })
 );
+
+// Habilitar Documentación Swagger / OpenAPI
+setupSwagger(app);
 
 // Register Modular API Routes
 app.use('/api', apiLimiter, apiRouter);
