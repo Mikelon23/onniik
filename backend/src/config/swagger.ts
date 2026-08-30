@@ -281,6 +281,39 @@ export const swaggerSpec = {
         },
       },
     },
+    '/auth/google/callback': {
+      get: {
+        tags: ['Auth'],
+        summary:
+          'Procesa el callback de Google OAuth 2.0, intercambia el código por tokens y guarda credenciales cifradas en BD',
+        parameters: [
+          {
+            in: 'query',
+            name: 'code',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Código de autorización devuelto por Google',
+          },
+          {
+            in: 'query',
+            name: 'state',
+            required: true,
+            schema: { type: 'string' },
+            description: 'Parámetro de estado CSRF verificado',
+          },
+          {
+            in: 'query',
+            name: 'error',
+            schema: { type: 'string' },
+            description: 'Mensaje de error si el usuario denegó el consentimiento',
+          },
+        ],
+        responses: {
+          '200': { description: 'Conexión con Google Workspace establecida exitosamente' },
+          '400': { description: 'Código de autorización o parámetro state inválido/expirado' },
+        },
+      },
+    },
     '/auth/google': {
       get: {
         tags: ['Auth'],

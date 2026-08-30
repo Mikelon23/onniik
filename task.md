@@ -111,7 +111,7 @@
 ## Integraciones y Conectores de Datos
 - `[x]` **Tarea 101**: Registrar la aplicación de Onniik en Google Cloud Console para habilitar OAuth de Google.
 - `[x]` **Tarea 102**: Implementar el flujo OAuth2 de Google Workspace en el backend de Onniik.
-- `[ ]` **Tarea 103**: Crear el endpoint para recibir el código de autorización de Google y guardar los tokens de acceso de forma segura.
+- `[x]` **Tarea 103**: Crear el endpoint para recibir el código de autorización de Google y guardar los tokens de acceso de forma segura.
 - `[ ]` **Tarea 104**: Implementar un servicio de rotación automática de tokens de refresco OAuth de Google.
 - `[ ]` **Tarea 105**: Diseñar la integración con la API de Google Directory para obtener la lista de usuarios y empleados de la organización.
 - `[ ]` **Tarea 106**: Implementar la detección de cuentas de Gmail activas en Google Workspace para identificar correos de cobro de SaaS.

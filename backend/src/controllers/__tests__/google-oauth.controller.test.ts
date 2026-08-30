@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { getGoogleAuthUrl, redirectToGoogleAuth } from '../google-oauth.controller';
+import {
+  getGoogleAuthUrl,
+  redirectToGoogleAuth,
+  handleGoogleCallback,
+} from '../google-oauth.controller';
 import { googleOAuthService } from '../../services/google-oauth.service';
 
 describe('GoogleOAuthController', () => {
@@ -56,6 +60,32 @@ describe('GoogleOAuthController', () => {
 
       expect(mockResponse.redirect).toHaveBeenCalledWith(
         expect.stringContaining('https://accounts.google.com')
+      );
+    });
+  });
+
+  describe('handleGoogleCallback', () => {
+    it('debe llamar a next(error) si el usuario denegó el consentimiento (error query param)', async () => {
+      mockRequest.query = { error: 'access_denied' };
+
+      await handleGoogleCallback(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Autorización cancelada o denegada'),
+        })
+      );
+    });
+
+    it('debe llamar a next(error) si faltan code o state', async () => {
+      mockRequest.query = { code: 'code_without_state' };
+
+      await handleGoogleCallback(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Parámetros de código o estado requeridos incompletos'),
+        })
       );
     });
   });
