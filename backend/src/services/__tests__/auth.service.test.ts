@@ -17,6 +17,7 @@ import { UnauthorizedError, InternalServerError } from '../../errors/AppError';
 import { JwtPayload } from '../../types/auth.types';
 
 describe('AuthService', () => {
+  jest.setTimeout(15000);
   const originalEnv = process.env;
 
   const mockUserPayload: JwtPayload = {

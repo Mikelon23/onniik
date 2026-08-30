@@ -236,6 +236,69 @@ export const swaggerSpec = {
         },
       },
     },
+    '/auth/google/url': {
+      get: {
+        tags: ['Auth'],
+        summary: 'Genera y retorna la URL de autorización de Google OAuth 2.0 en JSON',
+        parameters: [
+          {
+            in: 'query',
+            name: 'organizationId',
+            schema: { type: 'string' },
+            description: 'ID opcional de la organización a vincular',
+          },
+          {
+            in: 'query',
+            name: 'redirectPath',
+            schema: { type: 'string' },
+            description: 'Ruta opcional de redirección interna post-consentimiento',
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'URL de autorización OAuth 2.0 generada exitosamente',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    success: { type: 'boolean', example: true },
+                    data: {
+                      type: 'object',
+                      properties: {
+                        url: {
+                          type: 'string',
+                          example: 'https://accounts.google.com/o/oauth2/v2/auth?...',
+                        },
+                        state: { type: 'string', example: 'eyJvcmdhbml6YXRpb25JZCI6...' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/auth/google': {
+      get: {
+        tags: ['Auth'],
+        summary:
+          'Redirige directamente al cliente a la pantalla de consentimiento de Google OAuth 2.0',
+        parameters: [
+          {
+            in: 'query',
+            name: 'organizationId',
+            schema: { type: 'string' },
+            description: 'ID opcional de la organización a vincular',
+          },
+        ],
+        responses: {
+          '302': { description: 'Redirección a Google OAuth 2.0 Consent Screen' },
+        },
+      },
+    },
     '/orgs': {
       get: {
         tags: ['Organizations'],

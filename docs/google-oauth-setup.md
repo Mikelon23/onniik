@@ -72,3 +72,27 @@ GOOGLE_CLIENT_ID="1234567890-abcdefg.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="GOCSPX-abc123xyz456"
 GOOGLE_REDIRECT_URI="http://localhost:5000/api/v1/auth/google/callback"
 ```
+
+---
+
+## Paso 6: Endpoints Backend de Autorización OAuth 2.0 (Tarea 102)
+
+El backend de Onniik expone los siguientes endpoints para iniciar el flujo de autorización OAuth2 de Google Workspace:
+
+1. **Obtener URL de autorización (JSON)**:
+   - `GET /api/v1/auth/google/url?organizationId={id}&redirectPath={path}`
+   - **Respuesta (200 OK)**:
+     ```json
+     {
+       "success": true,
+       "data": {
+         "url": "https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=...&response_type=code&scope=...&access_type=offline&prompt=consent&state=...",
+         "state": "eyJvcmdhbml6YXRpb25JZCI6..."
+       }
+     }
+     ```
+
+2. **Redirección directa (HTTP 302)**:
+   - `GET /api/v1/auth/google?organizationId={id}`
+   - Redirige de inmediato al navegador del cliente hacia la pantalla de consentimiento de Google.
+
