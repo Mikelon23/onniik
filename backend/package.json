@@ -12,6 +12,7 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\"",
     "test": "jest",
+    "test:load": "ts-node src/scripts/run-load-test.ts",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio"
   },
