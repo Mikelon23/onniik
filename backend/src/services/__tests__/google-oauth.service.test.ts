@@ -1,5 +1,4 @@
 import { googleOAuthService } from '../google-oauth.service';
-import { GOOGLE_OAUTH_SCOPES } from '../../config/google.config';
 
 describe('GoogleOAuthService', () => {
   describe('generateState', () => {
