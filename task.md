@@ -114,7 +114,7 @@
 - `[x]` **Tarea 103**: Crear el endpoint para recibir el código de autorización de Google y guardar los tokens de acceso de forma segura.
 - `[x]` **Tarea 104**: Implementar un servicio de rotación automática de tokens de refresco OAuth de Google.
 - `[x]` **Tarea 105**: Diseñar la integración con la API de Google Directory para obtener la lista de usuarios y empleados de la organización.
-- `[ ]` **Tarea 106**: Implementar la detección de cuentas de Gmail activas en Google Workspace para identificar correos de cobro de SaaS.
+- `[x]` **Tarea 106**: Implementar la detección de cuentas de Gmail activas en Google Workspace para identificar correos de cobro de SaaS.
 - `[ ]` **Tarea 107**: Registrar la aplicación de Slack en Slack API Developer portal y configurar los scopes de lectura.
 - `[ ]` **Tarea 108**: Implementar la autenticación OAuth2 de Slack en el backend.
 - `[ ]` **Tarea 109**: Diseñar el servicio que consuma la API de Slack para obtener la lista de integraciones instaladas en el espacio de trabajo.
