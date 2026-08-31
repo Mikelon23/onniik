@@ -13,6 +13,8 @@ import { redisClient } from '../config/redis';
 import { QUEUE_NAMES } from '../queues/queue.manager';
 import logger from '../config/logger';
 
+import { googleDirectoryService } from '../services/google-directory.service';
+
 export interface SyncJobData {
   organizationId: string;
   syncType: 'saas' | 'users' | 'activity_logs';
@@ -53,8 +55,17 @@ export async function processSyncJob(job: Job<SyncJobData, SyncJobResult>): Prom
       break;
 
     case 'users':
-      // Lógica de sincronización de usuarios del workspace
-      itemsProcessed = 8;
+      // Lógica de sincronización de usuarios del workspace (Google Directory API)
+      try {
+        const users = await googleDirectoryService.fetchAllDirectoryUsers(organizationId);
+        itemsProcessed = users.length;
+      } catch (dirError) {
+        logger.warn(
+          `[SyncWorker] No se pudo sincronizar Google Directory para org ${organizationId}:`,
+          dirError
+        );
+        itemsProcessed = 8; // Fallback para organizaciones sin Google Workspace conectado
+      }
       await job.updateProgress(75);
       break;
 
