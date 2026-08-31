@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
+import { OAuthProvider } from '@prisma/client';
 import {
   getGoogleAuthUrl,
   redirectToGoogleAuth,
   handleGoogleCallback,
+  refreshGoogleToken,
 } from '../google-oauth.controller';
 import { googleOAuthService } from '../../services/google-oauth.service';
 
@@ -14,6 +16,7 @@ describe('GoogleOAuthController', () => {
   beforeEach(() => {
     mockRequest = {
       query: {},
+      body: {},
     };
     mockResponse = {
       status: jest.fn().mockReturnThis(),
@@ -85,6 +88,58 @@ describe('GoogleOAuthController', () => {
       expect(mockNext).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('Parámetros de código o estado requeridos incompletos'),
+        })
+      );
+    });
+  });
+
+  describe('refreshGoogleToken', () => {
+    it('debe responder con 200 OK y las credenciales renovadas', async () => {
+      mockRequest.body = { organizationId: 'org-refresh-controller' };
+
+      const mockCredential = {
+        id: 'cred-123',
+        organizationId: 'org-refresh-controller',
+        provider: OAuthProvider.GOOGLE_WORKSPACE,
+
+        accessTokenEnc: 'enc_access',
+        refreshTokenEnc: 'enc_refresh',
+        scope: 'openid',
+        tokenType: 'Bearer',
+        expiresAt: new Date(),
+        isActive: true,
+        externalAccountId: 'admin@org.com',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      jest.spyOn(googleOAuthService, 'refreshAccessToken').mockResolvedValueOnce(mockCredential);
+
+      await refreshGoogleToken(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: 'Token de acceso de Google Workspace renovado exitosamente',
+          data: expect.objectContaining({
+            credentialId: 'cred-123',
+            organizationId: 'org-refresh-controller',
+            provider: 'GOOGLE_WORKSPACE',
+          }),
+        })
+      );
+    });
+
+    it('debe llamar a next(error) si no se especifica organizationId', async () => {
+      mockRequest.body = {};
+      mockRequest.query = {};
+
+      await refreshGoogleToken(mockRequest as Request, mockResponse as Response, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('Se requiere el ID de la organización'),
         })
       );
     });

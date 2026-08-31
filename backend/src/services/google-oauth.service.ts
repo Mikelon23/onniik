@@ -8,7 +8,7 @@ import { OAuthProvider } from '@prisma/client';
 import prisma from '../config/db';
 import { getGoogleAuthUrl, getGoogleOAuthConfig } from '../config/google.config';
 import logger from '../config/logger';
-import { encrypt } from '../utils/crypto.utils';
+import { decrypt, encrypt } from '../utils/crypto.utils';
 import { BadRequestError } from '../errors/AppError';
 
 export interface OAuthStatePayload {
@@ -225,6 +225,157 @@ export class GoogleOAuthService {
     });
 
     return credential;
+  }
+
+  /**
+   * Refresca el token de acceso de Google Workspace utilizando el refresh token cifrado guardado.
+   *
+   * @param organizationId ID de la organización
+   * @returns La credencial OAuth actualizada
+   */
+  public async refreshAccessToken(organizationId: string) {
+    const credential = await prisma.oAuthCredential.findUnique({
+      where: {
+        unique_org_provider: {
+          organizationId,
+          provider: OAuthProvider.GOOGLE_WORKSPACE,
+        },
+      },
+    });
+
+    if (!credential || !credential.refreshTokenEnc) {
+      throw new BadRequestError(
+        'No existe una credencial OAuth con token de refresco para esta organización'
+      );
+    }
+
+    const refreshToken = decrypt(credential.refreshTokenEnc);
+    const config = getGoogleOAuthConfig();
+
+    const params = new URLSearchParams({
+      client_id: config.clientId,
+      client_secret: config.clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    });
+
+    try {
+      const response = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const errorData = (await response.json().catch(() => ({}))) as Record<string, string>;
+        logger.error('[GoogleOAuthService] Error al renovar token con Google:', errorData);
+
+        // Si el refresh token fue revocado o expiró, marcar credencial como inactiva
+        if (
+          errorData.error === 'invalid_grant' ||
+          response.status === 400 ||
+          response.status === 401
+        ) {
+          await prisma.oAuthCredential.update({
+            where: { id: credential.id },
+            data: { isActive: false },
+          });
+          logger.warn(
+            `[GoogleOAuthService] Credencial OAuth desactivada para org ${organizationId} por invalid_grant`
+          );
+          throw new BadRequestError(
+            'El token de refresco de Google ha caducado o ha sido revocado. Se requiere volver a autenticar.'
+          );
+        }
+
+        throw new BadRequestError(
+          `Google OAuth Refresh Error: ${errorData.error_description || errorData.error || 'Error al renovar token'}`
+        );
+      }
+
+      const tokenData = (await response.json()) as {
+        access_token: string;
+        expires_in: number;
+        scope?: string;
+        token_type?: string;
+        refresh_token?: string;
+      };
+
+      const newAccessTokenEnc = encrypt(tokenData.access_token);
+      const newRefreshTokenEnc = tokenData.refresh_token
+        ? encrypt(tokenData.refresh_token)
+        : undefined;
+      const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
+
+      const updatedCredential = await prisma.oAuthCredential.update({
+        where: { id: credential.id },
+        data: {
+          accessTokenEnc: newAccessTokenEnc,
+          ...(newRefreshTokenEnc && { refreshTokenEnc: newRefreshTokenEnc }),
+          expiresAt,
+          isActive: true,
+        },
+      });
+
+      logger.info(
+        '[GoogleOAuthService] Token de acceso de Google renovado y guardado exitosamente',
+        {
+          organizationId,
+          expiresAt,
+          hasNewRefreshToken: !!tokenData.refresh_token,
+        }
+      );
+
+      return updatedCredential;
+    } catch (error: unknown) {
+      if (error instanceof BadRequestError) {
+        throw error;
+      }
+      logger.error('[GoogleOAuthService] Error de red renovando token de Google:', error);
+      throw new BadRequestError(
+        'Fallo la conexión al renovar los tokens con los servidores de Google'
+      );
+    }
+  }
+
+  /**
+   * Obtiene un token de acceso descifrado y válido para la organización.
+   * Si el token está por expirar en menos de 5 minutos (300s), ejecuta automáticamente la rotación.
+   *
+   * @param organizationId ID de la organización
+   * @returns El access token plano y válido
+   */
+  public async getValidAccessToken(organizationId: string): Promise<string> {
+    const credential = await prisma.oAuthCredential.findUnique({
+      where: {
+        unique_org_provider: {
+          organizationId,
+          provider: OAuthProvider.GOOGLE_WORKSPACE,
+        },
+      },
+    });
+
+    if (!credential || !credential.isActive) {
+      throw new BadRequestError(
+        'No hay credenciales activas de Google Workspace para esta organización'
+      );
+    }
+
+    const safetyBufferMs = 5 * 60 * 1000; // 5 minutos de margen
+    const now = Date.now();
+
+    if (credential.expiresAt && credential.expiresAt.getTime() - now > safetyBufferMs) {
+      return decrypt(credential.accessTokenEnc);
+    }
+
+    logger.info(
+      `[GoogleOAuthService] Token de acceso expirado o próximo a expirar para org ${organizationId}. Iniciando renovación automática...`
+    );
+
+    const refreshedCredential = await this.refreshAccessToken(organizationId);
+    return decrypt(refreshedCredential.accessTokenEnc);
   }
 }
 

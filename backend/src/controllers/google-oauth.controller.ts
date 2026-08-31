@@ -173,3 +173,43 @@ export async function handleGoogleCallback(
     next(error);
   }
 }
+
+/**
+ * POST /api/v1/auth/google/refresh
+ * Renueva el token de acceso de Google Workspace utilizando el refresh token cifrado de la organización.
+ */
+export async function refreshGoogleToken(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const organizationId =
+      (req.body?.organizationId as string) ||
+      (req.query?.organizationId as string) ||
+      (authReq.user?.organizationId as string);
+
+    if (!organizationId) {
+      throw new BadRequestError('Se requiere el ID de la organización para renovar el token');
+    }
+
+    const credential = await googleOAuthService.refreshAccessToken(organizationId);
+
+    res.status(200).json({
+      success: true,
+      message: 'Token de acceso de Google Workspace renovado exitosamente',
+      data: {
+        credentialId: credential.id,
+        organizationId: credential.organizationId,
+        provider: credential.provider,
+        expiresAt: credential.expiresAt,
+        isActive: credential.isActive,
+        externalAccountId: credential.externalAccountId,
+      },
+    });
+  } catch (error) {
+    logger.error('[GoogleOAuthController] Error al renovar token de Google OAuth2:', error);
+    next(error);
+  }
+}
