@@ -54,4 +54,52 @@ describe('GoogleOAuthService', () => {
       expect(url).toContain(`state=${state}`);
     });
   });
+
+  describe('decodeIdToken', () => {
+    it('debe retornar null si no se provee un token', () => {
+      expect(googleOAuthService.decodeIdToken('')).toBeNull();
+      expect(googleOAuthService.decodeIdToken(undefined)).toBeNull();
+    });
+
+    it('debe decodificar un id_token JWT estructurado correctamente', () => {
+      const header = Buffer.from(JSON.stringify({ alg: 'RS256' })).toString('base64url');
+      const payload = Buffer.from(
+        JSON.stringify({ email: 'admin@empresa.com', sub: 'google-sub-123' })
+      ).toString('base64url');
+      const mockIdToken = `${header}.${payload}.signature_hash`;
+
+      const decoded = googleOAuthService.decodeIdToken(mockIdToken);
+      expect(decoded).toEqual({
+        email: 'admin@empresa.com',
+        sub: 'google-sub-123',
+      });
+    });
+  });
+
+  describe('exchangeCodeForTokens', () => {
+    it('debe realizar un POST a Google y retornar los tokens decodificados', async () => {
+      const mockTokenResponse = {
+        access_token: 'ya29.sample_access_token',
+        refresh_token: '1//sample_refresh_token',
+        expires_in: 3600,
+        scope: 'openid email',
+        token_type: 'Bearer',
+      };
+
+      global.fetch = jest.fn().mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockTokenResponse,
+      } as unknown as Response);
+
+      const result = await googleOAuthService.exchangeCodeForTokens('mock_auth_code');
+
+      expect(fetch).toHaveBeenCalledWith(
+        'https://oauth2.googleapis.com/token',
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+      expect(result).toEqual(mockTokenResponse);
+    });
+  });
 });

@@ -96,3 +96,8 @@ El backend de Onniik expone los siguientes endpoints para iniciar el flujo de au
    - `GET /api/v1/auth/google?organizationId={id}`
    - Redirige de inmediato al navegador del cliente hacia la pantalla de consentimiento de Google.
 
+3. **Callback de autorización y almacenamiento cifrado (Tarea 103)**:
+   - `GET /api/v1/auth/google/callback?code={authorization_code}&state={state_param}`
+   - Valida el parámetro `state` anti-CSRF, realiza la solicitud POST a `https://oauth2.googleapis.com/token`, cifra los tokens con **AES-256-GCM** y los almacena en el modelo `OAuthCredential` asociado a la organización en PostgreSQL.
+
+
